@@ -1,0 +1,187 @@
+name: CI
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    name: Setup and cache deps
+    runs-on: ubuntu-22.04
+
+    outputs:
+      elixir: ${{ steps.beam.outputs.elixir-version }}
+      otp: ${{ steps.beam.outputs.otp-version }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir/Erlang
+        uses: erlef/setup-beam@v1
+        id: beam
+        with:
+          version-file: .tool-versions
+          version-type: strict
+
+      - name: Cache deps
+        id: cache-deps
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-elixir-deps
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-${{ env.cache-name }}-
+
+      - name: Cache compiled build
+        id: cache-build
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-compiled-build
+        with:
+          path: _build
+          key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-${{ env.cache-name }}-
+            ${{ runner.os }}-mix-
+
+      - name: Install deps
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: |
+          mix deps.get
+          mix deps.compile
+          MIX_ENV=test mix compile
+          mix compile --all-warnings --warning-as-errors
+
+  static-analysis:
+    name: Static Code Analysis
+    needs: setup
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ needs.setup.outputs.elixir }}
+          otp-version: ${{ needs.setup.outputs.otp }}
+
+      - name: Restore deps cache
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-elixir-deps
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-${{ env.cache-name }}-
+
+      - name: Restore _build cache
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-compiled-build
+        with:
+          path: _build
+          key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-${{ env.cache-name }}-
+            ${{ runner.os }}-mix-
+
+      - name: Restore PLT cache
+        id: plt_cache
+        uses: actions/cache@v4
+        env:
+          cache-name: plt-cache
+        with:
+          path: priv/plts
+          key: plt-${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-${{ env.cache-name }}-          
+
+      - name: Run dialyzer
+        run: mix dialyzer --format github --format dialyxir
+
+      - name: Check code format
+        run: mix format --dry-run --check-formatted
+
+      - name: Run Credo
+        run: mix credo --strict
+
+      - name: Check unused dependencies
+        run: mix deps.unlock --check-unused
+
+      - name: Deps security audit
+        run: mix deps.audit
+        
+      - name: Security check
+        run: mix sobelow -i Config.HTTPS
+
+  test:
+    needs: setup
+    runs-on: ubuntu-22.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [1, 2, 3, 4]
+
+    services:
+      db:
+        image: postgres:17
+        ports: ['5432:5432']
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ needs.setup.outputs.elixir }}
+          otp-version: ${{ needs.setup.outputs.otp }}
+
+      - name: Restore deps cache
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-elixir-deps
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-${{ env.cache-name }}-
+
+      - name: Restore _build cache
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-compiled-build
+        with:
+          path: _build
+          key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-${{ env.cache-name }}-
+            ${{ runner.os }}-mix-
+
+      - name: Run tests
+        env:
+          MIX_ENV: test
+          MIX_TEST_PARTITION: ${{ matrix.partition }}
+
+        run: |
+          echo "Running partition ${{ env.MIX_TEST_PARTITION }}"
+          mix test --partitions 4
