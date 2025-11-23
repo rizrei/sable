@@ -1,4 +1,4 @@
-defmodule Sable.Metric do
+defmodule Sable.Exercises.Metric do
   @moduledoc """
   The Metric schema.
   """
@@ -13,7 +13,7 @@ defmodule Sable.Metric do
     field :title, :string
     field :unit, :string
 
-    has_many :exercise_metrics, Sable.ExerciseMetric
+    has_many :exercise_metrics, Sable.Exercises.ExerciseMetric
     has_many :exercises, through: [:exercise_metrics, :exercise]
 
     timestamps(type: :utc_datetime)

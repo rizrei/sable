@@ -4,7 +4,7 @@ defmodule Sable.Factories.ExerciseMetricFactory do
   defmacro __using__(_opts) do
     quote do
       def exercise_metric_factory do
-        %Sable.ExerciseMetric{
+        %Sable.Exercises.ExerciseMetric{
           exercise: build(:push_up_exercise),
           metric: build(:reps_metric)
         }
