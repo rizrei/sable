@@ -2,5 +2,5 @@ defmodule Sable.Factory do
   @moduledoc false
 
   use ExMachina.Ecto, repo: Sable.Repo
-  # use Sable.Factories.{UserFactory}
+  use Sable.Factories.{ExerciseFactory, MetricFactory, ExerciseMetricFactory}
 end
