@@ -1,4 +1,4 @@
-defmodule Sable.ExerciseMetric do
+defmodule Sable.Exercises.ExerciseMetric do
   @moduledoc """
   The ExerciseMetric schema.
   """
@@ -7,7 +7,7 @@ defmodule Sable.ExerciseMetric do
 
   import Ecto.Changeset
 
-  alias Sable.{Exercise, Metric}
+  alias Sable.{Exercises.Exercise, Exercises.Metric}
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id

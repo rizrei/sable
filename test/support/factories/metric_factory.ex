@@ -3,7 +3,7 @@ defmodule Sable.Factories.MetricFactory do
 
   defmacro __using__(_opts) do
     quote do
-      alias Sable.Metric
+      alias Sable.Exercises.Metric
 
       def reps_metric_factory, do: %Metric{title: "Reps", unit: "quantity"}
       def weight_metric_factory, do: %Metric{title: "Weight", unit: "kg"}
