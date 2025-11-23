@@ -11,7 +11,17 @@ defmodule Sable.MixProject do
       aliases: aliases(),
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
-      listeners: [Phoenix.CodeReloader]
+      listeners: [Phoenix.CodeReloader],
+      test_coverage: [tool: ExCoveralls],
+      dialyzer: [plt_file: {:no_warn, "priv/plts/project.plt"}],
+      excoveralls: [threshold: 80],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test,
+        "coveralls.cobertura": :test
+      ]
     ]
   end
 
@@ -40,17 +50,17 @@ defmodule Sable.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      # Phoenix
       {:phoenix, "~> 1.8.1"},
       {:phoenix_ecto, "~> 4.5"},
-      {:ecto_sql, "~> 3.13"},
-      {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 1.1.0"},
-      {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
-      {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
+      {:dns_cluster, "~> 0.2.0"},
+      # Frontend
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
+      {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.2.0",
@@ -58,14 +68,36 @@ defmodule Sable.MixProject do
        app: false,
        compile: false,
        depth: 1},
-      {:swoosh, "~> 1.16"},
+      # HTTP
+      {:bandit, "~> 1.5"},
       {:req, "~> 0.5"},
+      # JSON
+      {:jason, "~> 1.2"},
+      # Mailer
+      {:swoosh, "~> 1.16"},
+      # I18n
+      {:gettext, "~> 0.26"},
+      # DB
+      {:postgrex, ">= 0.0.0"},
+      {:ecto_sql, "~> 3.13"},
+      {:bcrypt_elixir, "~> 3.0"},
+      # Authorization
+      {:bodyguard, "~> 2.4"},
+      # CORS
+      {:cors_plug, "~> 3.0"},
+      # Metrics
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 0.26"},
-      {:jason, "~> 1.2"},
-      {:dns_cluster, "~> 0.2.0"},
-      {:bandit, "~> 1.5"}
+      # Linters
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
+      {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false},
+      # Tests
+      {:faker, "~> 0.19.0-alpha.1", only: [:dev, :test]},
+      {:ex_machina, "~> 2.8.0", only: :test},
+      {:excoveralls, "~> 0.18", only: :test},
+      {:lazy_html, ">= 0.1.0", only: :test}
     ]
   end
 
@@ -88,7 +120,16 @@ defmodule Sable.MixProject do
         "esbuild sable --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warning-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: ["compile --warning-as-errors", "deps.unlock --unused", "format", "test"],
+      cover: ["coveralls.html"],
+      lint: [
+        "dialyzer --format github --format dialyxir",
+        "format --dry-run --check-formatted",
+        "credo --strict",
+        "deps.unlock --check-unused",
+        "deps.audit",
+        "sobelow -i Config.HTTPS"
+      ]
     ]
   end
 end

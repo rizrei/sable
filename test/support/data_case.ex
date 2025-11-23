@@ -1,3 +1,5 @@
+# credo:disable-for-this-file Credo.Check.Design.AliasUsage
+
 defmodule Sable.DataCase do
   @moduledoc """
   This module defines the setup for tests requiring
@@ -21,9 +23,8 @@ defmodule Sable.DataCase do
       alias Sable.Repo
 
       import Ecto
-      import Ecto.Changeset
-      import Ecto.Query
-      import Sable.DataCase
+      import Ecto.{Changeset, Query}
+      import Sable.{Factory, DataCase}
     end
   end
 

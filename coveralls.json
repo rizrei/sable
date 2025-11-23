@@ -1,0 +1,13 @@
+{
+  "skip_files": [
+    "test/factories",
+    "test/support",
+    "lib/sable.ex",
+    "lib/sable/repo.ex",
+    "lib/sable/mailer.ex",
+    "lib/sable_web/gettext.ex",
+    "lib/sable_web/endpoint.ex",
+    "lib/sable_web/components/layouts.ex",
+    "lib/sable_web/components/core_components.ex"
+  ]
+}

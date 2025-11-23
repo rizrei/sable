@@ -1,3 +1,5 @@
+# credo:disable-for-this-file Credo.Check.Design.AliasUsage
+
 defmodule SableWeb.CoreComponents do
   @moduledoc """
   Provides core UI components.
