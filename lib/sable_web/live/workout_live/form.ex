@@ -47,7 +47,7 @@ defmodule SableWeb.WorkoutLive.Form do
             value="new"
             phx-click={JS.dispatch("change")}
           >
-            add more
+            Add Tag
           </.button>
         </div>
 
