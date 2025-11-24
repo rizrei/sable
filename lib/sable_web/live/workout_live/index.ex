@@ -1,7 +1,9 @@
 defmodule SableWeb.WorkoutLive.Index do
   use SableWeb, :live_view
 
-  alias Sable.Workouts
+  import SableWeb.TagComponents
+
+  alias Sable.{Repo, Workouts}
 
   @impl true
   def render(assigns) do
@@ -23,6 +25,9 @@ defmodule SableWeb.WorkoutLive.Index do
       >
         <:col :let={{_id, workout}} label="Title">{workout.title}</:col>
         <:col :let={{_id, workout}} label="Description">{workout.description}</:col>
+        <:col :let={{_id, workout}} label="Tags">
+          <.tags_list tags={workout.tags} />
+        </:col>
         <:action :let={{_id, workout}}>
           <div class="sr-only">
             <.link navigate={~p"/workouts/#{workout}"}>Show</.link>
@@ -47,7 +52,7 @@ defmodule SableWeb.WorkoutLive.Index do
     {:ok,
      socket
      |> assign(:page_title, "Listing Workouts")
-     |> stream(:workouts, list_workouts())}
+     |> stream(:workouts, Workouts.list_workouts() |> Repo.preload([:tags]))}
   end
 
   @impl true
@@ -56,9 +61,5 @@ defmodule SableWeb.WorkoutLive.Index do
     {:ok, _} = Workouts.delete_workout(workout)
 
     {:noreply, stream_delete(socket, :workouts, workout)}
-  end
-
-  defp list_workouts() do
-    Workouts.list_workouts()
   end
 end

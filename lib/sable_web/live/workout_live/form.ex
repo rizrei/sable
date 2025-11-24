@@ -1,6 +1,7 @@
 defmodule SableWeb.WorkoutLive.Form do
   use SableWeb, :live_view
 
+  alias Sable.Repo
   alias Sable.Workouts
   alias Sable.Workouts.Workout
 
@@ -16,6 +17,40 @@ defmodule SableWeb.WorkoutLive.Form do
       <.form for={@form} id="workout-form" phx-change="validate" phx-submit="save">
         <.input field={@form[:title]} type="text" label="Title" />
         <.input field={@form[:description]} type="textarea" label="Description" />
+
+        <div id="tags-inputs">
+          <.inputs_for :let={workout_tag} field={@form[:workout_tags]}>
+            <div class="flex items-center mt-4 mb-2 space-x-2">
+              <input type="hidden" name="workout[workout_tags_sort][]" value={workout_tag.index} />
+              <.input
+                field={workout_tag[:tag_id]}
+                type="select"
+                label="Tag"
+                options={Enum.map(@tags, &{&1.title, &1.id})}
+              />
+              <button
+                type="button"
+                name="workout[workout_tags_drop][]"
+                value={workout_tag.index}
+                phx-click={JS.dispatch("change")}
+              >
+                <.icon name="hero-x-mark" class="w-6 h-6 relative top-2" />
+              </button>
+            </div>
+          </.inputs_for>
+
+          <input type="hidden" name="workout[workout_tags_drop][]" />
+
+          <.button
+            type="button"
+            name="workout[workout_tags_sort][]"
+            value="new"
+            phx-click={JS.dispatch("change")}
+          >
+            add more
+          </.button>
+        </div>
+
         <footer>
           <.button phx-disable-with="Saving..." variant="primary">Save Workout</.button>
           <.button navigate={return_path(@return_to, @workout)}>Cancel</.button>
@@ -37,21 +72,23 @@ defmodule SableWeb.WorkoutLive.Form do
   defp return_to(_), do: "index"
 
   defp apply_action(socket, :edit, %{"id" => id}) do
-    workout = Workouts.get_workout!(id)
+    workout = Workouts.get_workout!(id) |> Repo.preload(:tags)
 
     socket
     |> assign(:page_title, "Edit Workout")
     |> assign(:workout, workout)
-    |> assign(:form, to_form(Workouts.change_workout(workout)))
+    |> assign(:tags, Sable.Tag |> Repo.all())
+    |> assign(:form, workout |> Workouts.change_workout() |> to_form())
   end
 
   defp apply_action(socket, :new, _params) do
-    workout = %Workout{}
+    workout = %Workout{workout_tags: []}
 
     socket
     |> assign(:page_title, "New Workout")
     |> assign(:workout, workout)
-    |> assign(:form, to_form(Workouts.change_workout(workout)))
+    |> assign(:tags, Sable.Tag |> Repo.all())
+    |> assign(:form, workout |> Workouts.change_workout() |> to_form())
   end
 
   @impl true
@@ -78,6 +115,8 @@ defmodule SableWeb.WorkoutLive.Form do
   end
 
   defp save_workout(socket, :new, workout_params) do
+    workout_params = Map.put(workout_params, "author_id", socket.assigns.current_user.id)
+
     case Workouts.create_workout(workout_params) do
       {:ok, workout} ->
         {:noreply,
