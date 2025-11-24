@@ -51,7 +51,7 @@ defmodule SableWeb.WorkoutLive.Form do
           </.button>
         </div>
 
-        <div id="exercises-inputs" phx-hook="SortableHook">
+        <div id="exercises-inputs">
           <.inputs_for :let={workout_exercise} field={@form[:workout_exercises]}>
             <div class="flex items-center mt-4 mb-2 space-x-2">
               <input
@@ -59,6 +59,14 @@ defmodule SableWeb.WorkoutLive.Form do
                 name="workout[workout_exercises_sort][]"
                 value={workout_exercise.index}
               />
+
+              <%!-- <.input
+                field={workout_exercise[:position]}
+                type="number"
+                label="Position"
+                required="true"
+              /> --%>
+
               <.input
                 field={workout_exercise[:exercise_id]}
                 type="select"
@@ -136,7 +144,11 @@ defmodule SableWeb.WorkoutLive.Form do
   end
 
   def handle_event("save", %{"workout" => workout_params}, socket) do
-    save_workout(socket, socket.assigns.live_action, workout_params)
+    IO.inspect(socket.assigns[:current_user])
+    # workout_params = Map.put(workout_params, "author_id", socket.assigns.current_user.id)
+
+    {:noreply, socket}
+    # save_workout(socket, socket.assigns.live_action, workout_params)
   end
 
   defp save_workout(socket, :edit, workout_params) do
@@ -153,6 +165,7 @@ defmodule SableWeb.WorkoutLive.Form do
   end
 
   defp save_workout(socket, :new, workout_params) do
+    IO.inspect(socket.assigns.current_user)
     workout_params = Map.put(workout_params, "author_id", socket.assigns.current_user.id)
 
     case Workouts.create_workout(workout_params) do
@@ -165,13 +178,6 @@ defmodule SableWeb.WorkoutLive.Form do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
-  end
-
-  def handle_event("reposition", params, socket) do
-    # Put your logic here to deal with the changes to the list order
-    # and persist the data
-    IO.inspect(params)
-    {:noreply, socket}
   end
 
   defp return_path("index", _workout), do: ~p"/workouts"

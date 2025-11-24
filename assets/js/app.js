@@ -24,34 +24,12 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/sable"
 import topbar from "../vendor/topbar"
-import Sortable from "../vendor/sortable"
-
-export const SortableHook = {
-  mounted(){
-    let sorter = new Sortable(this.el, {
-      animation: 150,
-      delay: 100,
-      dragClass: "drag-item",
-      ghostClass: "drag-ghost",
-      forceFallback: true,
-      onEnd: e => {
-        let params = {old: e.oldIndex, new: e.newIndex, ...e.item.dataset}
-        this.pushEventTo(this.el, "reposition", params)
-      }
-    })
-  }
-}
-
-const hooks = {
-  ...colocatedHooks,
-  SortableHook
-}
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: hooks,
+  hooks: {...colocatedHooks},
 })
 
 // Show progress bar on live navigation and form submits

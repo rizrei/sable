@@ -8,7 +8,6 @@ defmodule SableWeb.Router do
     plug :put_root_layout, html: {SableWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug Sable.Plugs.Authenticate
   end
 
   pipeline :api do
