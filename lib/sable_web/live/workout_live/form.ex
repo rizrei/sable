@@ -51,6 +51,43 @@ defmodule SableWeb.WorkoutLive.Form do
           </.button>
         </div>
 
+        <div id="exercises-inputs" phx-hook="SortableHook">
+          <.inputs_for :let={workout_exercise} field={@form[:workout_exercises]}>
+            <div class="flex items-center mt-4 mb-2 space-x-2">
+              <input
+                type="hidden"
+                name="workout[workout_exercises_sort][]"
+                value={workout_exercise.index}
+              />
+              <.input
+                field={workout_exercise[:exercise_id]}
+                type="select"
+                label="Exercise"
+                options={Enum.map(@exercises, &{&1.title, &1.id})}
+              />
+              <button
+                type="button"
+                name="workout[workout_exercises_drop][]"
+                value={workout_exercise.index}
+                phx-click={JS.dispatch("change")}
+              >
+                <.icon name="hero-x-mark" class="w-6 h-6 relative top-2" />
+              </button>
+            </div>
+          </.inputs_for>
+
+          <input type="hidden" name="workout[workout_exercises_drop][]" />
+
+          <.button
+            type="button"
+            name="workout[workout_exercises_sort][]"
+            value="new"
+            phx-click={JS.dispatch("change")}
+          >
+            Add Exercise
+          </.button>
+        </div>
+
         <footer>
           <.button phx-disable-with="Saving..." variant="primary">Save Workout</.button>
           <.button navigate={return_path(@return_to, @workout)}>Cancel</.button>
@@ -82,12 +119,13 @@ defmodule SableWeb.WorkoutLive.Form do
   end
 
   defp apply_action(socket, :new, _params) do
-    workout = %Workout{workout_tags: []}
+    workout = %Workout{workout_tags: [], workout_exercises: []}
 
     socket
     |> assign(:page_title, "New Workout")
     |> assign(:workout, workout)
     |> assign(:tags, Sable.Tag |> Repo.all())
+    |> assign(:exercises, Sable.Exercises.Exercise |> Repo.all())
     |> assign(:form, workout |> Workouts.change_workout() |> to_form())
   end
 
@@ -127,6 +165,13 @@ defmodule SableWeb.WorkoutLive.Form do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
+  end
+
+  def handle_event("reposition", params, socket) do
+    # Put your logic here to deal with the changes to the list order
+    # and persist the data
+    IO.inspect(params)
+    {:noreply, socket}
   end
 
   defp return_path("index", _workout), do: ~p"/workouts"
