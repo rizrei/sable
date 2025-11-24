@@ -7,7 +7,8 @@ defmodule SableWeb.Router do
     plug :fetch_live_flash
     plug :put_root_layout, html: {SableWeb.Layouts, :root}
     plug :protect_from_forgery
-    plug :put_secure_browser_headers, %{"content-security-policy" => "default-src 'self'"}
+    plug :put_secure_browser_headers
+    plug Sable.Plugs.Authenticate
   end
 
   pipeline :api do
@@ -17,7 +18,12 @@ defmodule SableWeb.Router do
   scope "/", SableWeb do
     pipe_through :browser
 
-    # get "/", MyController, :home
+    live "/", WorkoutLive.Index, :index
+
+    live "/workouts", WorkoutLive.Index, :index
+    live "/workouts/new", WorkoutLive.Form, :new
+    live "/workouts/:id", WorkoutLive.Show, :show
+    live "/workouts/:id/edit", WorkoutLive.Form, :edit
   end
 
   # Other scopes may use custom stacks.

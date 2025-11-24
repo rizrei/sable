@@ -15,12 +15,12 @@ user = %User{first_name: "Dima", last_name: "F", phone: "+79999999999"} |> Repo.
 reps_metric = %Metric{title: "Reps", unit: "quantity"} |> Repo.insert!()
 weight_metric = %Metric{title: "Weight", unit: "kg"} |> Repo.insert!()
 distance_metric = %Metric{title: "Distance", unit: "meter"} |> Repo.insert!()
-gym_tag = %Tag{title: "Gym"}
-cardio_tag = %Tag{title: "Cardio"}
-legs_tag = %Tag{title: "Legs"}
-back_tag = %Tag{title: "Back"}
-chest_tag = %Tag{title: "Сhest"}
-monday_tag = %Tag{title: "Monday"}
+gym_tag = %Tag{title: "Gym", color: "#b93559"}
+cardio_tag = %Tag{title: "Cardio", color: "#7892cd"}
+legs_tag = %Tag{title: "Legs", color: "#a80b70"}
+back_tag = %Tag{title: "Back", color: "#e79807"}
+chest_tag = %Tag{title: "Сhest", color: "#f52d7d"}
+monday_tag = %Tag{title: "Monday", color: "#ff6f6f"}
 
 barbell_bench_press_exercise =
   %Exercise{

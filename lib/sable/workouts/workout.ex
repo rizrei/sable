@@ -4,7 +4,11 @@ defmodule Sable.Workouts.Workout do
   """
 
   use Ecto.Schema
+
+  import Ecto.Query
   import Ecto.Changeset
+
+  alias Sable.Repo
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -14,8 +18,8 @@ defmodule Sable.Workouts.Workout do
 
     belongs_to :author, Sable.User
 
-    has_many :workout_tags, Sable.Workouts.WorkoutTag
     has_many :workout_exercises, Sable.Workouts.WorkoutExercise
+    has_many :workout_tags, Sable.Workouts.WorkoutTag, on_replace: :delete
     has_many :tags, through: [:workout_tags, :tag]
     has_many :exercises, through: [:workout_exercises, :exercise]
 
@@ -25,8 +29,20 @@ defmodule Sable.Workouts.Workout do
   @doc false
   def changeset(workout, attrs) do
     workout
-    |> cast(attrs, [:title, :description, :user_id])
-    |> validate_required([:title, :description, :user_id])
-    |> foreign_key_constraint(:user_id)
+    |> cast(attrs, [:title, :description, :author_id])
+    |> cast_assoc(:workout_tags,
+      with: &workout_tag_changeset/2,
+      sort_param: :workout_tags_sort,
+      drop_param: :workout_tags_drop,
+      required: false
+    )
+    |> validate_required([:title, :description, :author_id])
+    |> foreign_key_constraint(:author_id)
+  end
+
+  defp workout_tag_changeset(workout_tag, attrs) do
+    workout_tag
+    |> cast(attrs, [:tag_id])
+    |> validate_required([:tag_id])
   end
 end
