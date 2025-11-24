@@ -62,8 +62,8 @@ workout =
       %WorkoutTag{tag: chest_tag}
     ],
     workout_exercises: [
-      %WorkoutExercise{exercise: barbell_bench_press_exercise},
-      %WorkoutExercise{exercise: push_up_exercise}
+      %WorkoutExercise{position: 1, exercise: barbell_bench_press_exercise},
+      %WorkoutExercise{position: 2, exercise: push_up_exercise}
     ]
   }
   |> Repo.insert!()

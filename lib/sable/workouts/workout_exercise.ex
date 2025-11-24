@@ -10,6 +10,8 @@ defmodule Sable.Workouts.WorkoutExercise do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "workout_exercise" do
+    field :position, :integer, default: 0
+
     belongs_to :workout, Sable.Workouts.Workout
     belongs_to :exercise, Sable.Exercises.Exercise
 
@@ -19,7 +21,7 @@ defmodule Sable.Workouts.WorkoutExercise do
   @doc false
   def changeset(workout_exercise, attrs) do
     workout_exercise
-    |> cast(attrs, [:workout_id, :exercise_id])
-    |> validate_required([:workout_id, :exercise_id])
+    |> cast(attrs, [:position, :workout_id, :exercise_id])
+    |> validate_required([:position, :workout_id, :exercise_id])
   end
 end
