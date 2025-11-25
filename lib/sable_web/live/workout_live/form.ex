@@ -60,12 +60,13 @@ defmodule SableWeb.WorkoutLive.Form do
                 value={workout_exercise.index}
               />
 
-              <%!-- <.input
+              <.input
                 field={workout_exercise[:position]}
                 type="number"
+                min="1"
                 label="Position"
                 required="true"
-              /> --%>
+              />
 
               <.input
                 field={workout_exercise[:exercise_id]}
@@ -117,12 +118,13 @@ defmodule SableWeb.WorkoutLive.Form do
   defp return_to(_), do: "index"
 
   defp apply_action(socket, :edit, %{"id" => id}) do
-    workout = Workouts.get_workout!(id) |> Repo.preload(:tags)
+    workout = Workouts.get_workout!(id) |> Repo.preload([:tags, :workout_exercises])
 
     socket
     |> assign(:page_title, "Edit Workout")
     |> assign(:workout, workout)
     |> assign(:tags, Sable.Tag |> Repo.all())
+    |> assign(:exercises, Sable.Exercises.Exercise |> Repo.all())
     |> assign(:form, workout |> Workouts.change_workout() |> to_form())
   end
 
@@ -144,11 +146,7 @@ defmodule SableWeb.WorkoutLive.Form do
   end
 
   def handle_event("save", %{"workout" => workout_params}, socket) do
-    IO.inspect(socket.assigns[:current_user])
-    # workout_params = Map.put(workout_params, "author_id", socket.assigns.current_user.id)
-
-    {:noreply, socket}
-    # save_workout(socket, socket.assigns.live_action, workout_params)
+    save_workout(socket, socket.assigns.live_action, workout_params)
   end
 
   defp save_workout(socket, :edit, workout_params) do
@@ -165,8 +163,7 @@ defmodule SableWeb.WorkoutLive.Form do
   end
 
   defp save_workout(socket, :new, workout_params) do
-    IO.inspect(socket.assigns.current_user)
-    workout_params = Map.put(workout_params, "author_id", socket.assigns.current_user.id)
+    workout_params = Map.put(workout_params, "author_id", socket.assigns.current_scope.user.id)
 
     case Workouts.create_workout(workout_params) do
       {:ok, workout} ->
