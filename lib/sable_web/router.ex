@@ -55,6 +55,8 @@ defmodule SableWeb.Router do
       live "/workouts/new", WorkoutLive.Form, :new
       live "/workouts/:id", WorkoutLive.Show, :show
       live "/workouts/:id/edit", WorkoutLive.Form, :edit
+
+      live "/exercises/:exercise_id/sets", SetLive.Index, :index
     end
 
     post "/users/update-password", UserSessionController, :update_password

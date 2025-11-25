@@ -9,7 +9,7 @@ defmodule SableWeb.WorkoutLive.Show do
     ~H"""
     <Layouts.app flash={@flash}>
       <.header>
-        Workout {@workout.id}
+        Workout {@workout.title}
         <:subtitle>This is a workout record from your database.</:subtitle>
         <:actions>
           <.button navigate={~p"/workouts"}>
@@ -33,12 +33,21 @@ defmodule SableWeb.WorkoutLive.Show do
         rows={@streams.workout_exercises}
         row_click={
           fn {_id, workout_exercises} ->
-            JS.navigate(~p"/workouts/#{workout_exercises.workout_id}")
+            JS.navigate(
+              ~p"/exercises/#{workout_exercises.exercise_id}/sets/?workout_id=#{@workout.id}"
+            )
           end
         }
       >
         <:col :let={{_id, workout_exercise}} label="Position">{workout_exercise.position}</:col>
         <:col :let={{_id, workout_exercise}} label="Title">{workout_exercise.exercise.title}</:col>
+        <:action :let={{_id, workout_exercise}}>
+          <.button navigate={
+            ~p"/exercises/#{workout_exercise.exercise_id}/sets/?workout_id=#{@workout.id}"
+          }>
+            Add Set
+          </.button>
+        </:action>
       </.table>
     </Layouts.app>
     """
