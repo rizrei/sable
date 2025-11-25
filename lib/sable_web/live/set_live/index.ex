@@ -1,8 +1,10 @@
 defmodule SableWeb.SetLive.Index do
   use SableWeb, :live_view
 
-  alias Sable.{Repo, Sets}
+  alias Sable.Sets
   alias Sets.Set
+
+  @default_limit 5
 
   @impl true
   def render(assigns) do
@@ -51,26 +53,36 @@ defmodule SableWeb.SetLive.Index do
           </.link>
         </:action>
       </.table>
+
+      <footer>
+        <.button variant="primary" phx-click="load-more">
+          <.icon name="hero-plus" /> Load more
+        </.button>
+      </footer>
     </Layouts.app>
     """
   end
 
   @impl true
-  def mount(%{"exercise_id" => exercise_id} = params, _session, socket) do
+  def mount(_params, _session, socket) do
     if connected?(socket), do: Sets.subscribe_sets(socket.assigns.current_scope)
-
-    exercise =
-      Sable.Exercises.Exercise |> Repo.get(exercise_id)
-
-    sets = Sets.list_sets(socket.assigns.current_scope, exercise_id)
 
     {:ok,
      socket
      |> assign(:page_title, "Listing Sets")
-     |> assign(:return_path, return_path(params))
-     |> assign(:form, to_form(Sets.change_set(%Set{})))
-     |> assign(:exercise, exercise)
-     |> stream(:sets, sets)}
+     |> assign(:form, new_set_form())}
+  end
+
+  @impl true
+  def handle_params(params, uri, socket) do
+    socket =
+      socket
+      |> assign(:uri, build_uri(uri))
+      |> assign(:return_path, return_path(params))
+      |> assign(:exercise, Sable.Exercises.get_exercise(params["exercise_id"]))
+      |> stream(:sets, Sets.list_sets(socket.assigns.current_scope, params))
+
+    {:noreply, socket}
   end
 
   @impl true
@@ -79,6 +91,13 @@ defmodule SableWeb.SetLive.Index do
     {:ok, _} = Sets.delete_set(socket.assigns.current_scope, set)
 
     {:noreply, stream_delete(socket, :sets, set)}
+  end
+
+  @impl true
+  def handle_event("load-more", _params, socket) do
+    %{path: path, query: query} = build_uri(socket.assigns.uri)
+
+    {:noreply, push_patch(socket, to: "#{path}?#{query}")}
   end
 
   @impl true
@@ -97,7 +116,7 @@ defmodule SableWeb.SetLive.Index do
       {:ok, _set} ->
         {:noreply,
          socket
-         |> assign(:form, to_form(Sets.change_set(%Set{})))
+         |> assign(:form, new_set_form())
          |> put_flash(:info, "Set created successfully")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -127,4 +146,16 @@ defmodule SableWeb.SetLive.Index do
 
   defp return_path(%{"workout_id" => workout_id}), do: ~p"/workouts/#{workout_id}"
   defp return_path(_), do: ~p"/workouts"
+
+  defp new_set_form, do: %Set{} |> Sets.change_set() |> to_form()
+
+  defp build_uri(uri) when is_binary(uri), do: uri |> URI.parse() |> build_uri()
+  defp build_uri(%URI{query: query} = struct), do: %{struct | query: build_url_query(query)}
+
+  defp build_url_query(query) do
+    query
+    |> URI.decode_query()
+    |> Map.update("limit", @default_limit, &(String.to_integer(&1) + @default_limit))
+    |> URI.encode_query()
+  end
 end
