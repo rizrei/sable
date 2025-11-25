@@ -1,4 +1,7 @@
 defmodule Sable.SetMetrics do
+  @moduledoc """
+  The SetMetrics embedded schema.
+  """
   use Ecto.Schema
   import Ecto.Changeset
 

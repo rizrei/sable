@@ -1,9 +1,8 @@
 defmodule SableWeb.SetLive.Index do
   use SableWeb, :live_view
 
-  alias Sable.Sets
+  alias Sable.{Repo, Sets}
   alias Sets.Set
-  alias Sable.Repo
 
   @impl true
   def render(assigns) do
@@ -69,7 +68,7 @@ defmodule SableWeb.SetLive.Index do
      socket
      |> assign(:page_title, "Listing Sets")
      |> assign(:return_path, return_path(params))
-     |> assign(:form, to_form(Sets.change_set(%Sable.Sets.Set{})))
+     |> assign(:form, to_form(Sets.change_set(%Set{})))
      |> assign(:exercise, exercise)
      |> stream(:sets, sets)}
   end
@@ -98,7 +97,7 @@ defmodule SableWeb.SetLive.Index do
       {:ok, _set} ->
         {:noreply,
          socket
-         |> assign(:form, to_form(Sets.change_set(%Sable.Sets.Set{})))
+         |> assign(:form, to_form(Sets.change_set(%Set{})))
          |> put_flash(:info, "Set created successfully")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -107,7 +106,7 @@ defmodule SableWeb.SetLive.Index do
   end
 
   @impl true
-  def handle_info({:created, %Sable.Sets.Set{} = set}, socket) do
+  def handle_info({:created, %Set{} = set}, socket) do
     socket =
       socket
       |> put_flash(:info, "Set created successfully.")
@@ -117,7 +116,7 @@ defmodule SableWeb.SetLive.Index do
   end
 
   @impl true
-  def handle_info({:deleted, %Sable.Sets.Set{} = set}, socket) do
+  def handle_info({:deleted, %Set{} = set}, socket) do
     socket =
       socket
       |> put_flash(:info, "Set deleted successfully.")

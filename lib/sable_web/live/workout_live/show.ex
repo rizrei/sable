@@ -1,8 +1,7 @@
 defmodule SableWeb.WorkoutLive.Show do
   use SableWeb, :live_view
 
-  alias Sable.Workouts
-  alias Sable.Repo
+  alias Sable.{Repo, Workouts}
 
   @impl true
   def render(assigns) do

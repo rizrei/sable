@@ -1,4 +1,8 @@
 defmodule SableWeb.TagComponents do
+  @moduledoc """
+  Provides tag components.
+  """
+
   use SableWeb, :live_component
 
   attr :tags, :list

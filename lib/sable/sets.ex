@@ -4,10 +4,10 @@ defmodule Sable.Sets do
   """
 
   import Ecto.Query, warn: false
-  alias Sable.Repo
 
-  alias Sable.Sets.Set
   alias Sable.Accounts.Scope
+  alias Sable.Repo
+  alias Sable.Sets.Set
 
   @doc """
   Subscribes to scoped notifications about any set changes.
@@ -83,30 +83,6 @@ defmodule Sable.Sets do
            |> Set.changeset(attrs)
            |> Repo.insert() do
       broadcast_set(scope, {:created, set})
-      {:ok, set}
-    end
-  end
-
-  @doc """
-  Updates a set.
-
-  ## Examples
-
-      iex> update_set(scope, set, %{field: new_value})
-      {:ok, %Set{}}
-
-      iex> update_set(scope, set, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_set(%Scope{} = scope, %Set{} = set, attrs) do
-    true = set.user_id == scope.user.id
-
-    with {:ok, set = %Set{}} <-
-           set
-           |> Set.changeset(attrs, scope)
-           |> Repo.update() do
-      broadcast_set(scope, {:updated, set})
       {:ok, set}
     end
   end
