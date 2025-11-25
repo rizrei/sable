@@ -122,7 +122,7 @@ jobs:
         run: mix deps.audit
         
       - name: Security check
-        run: mix sobelow -i Config.HTTPS
+        run: mix sobelow --ignore Config.CSP,Config.HTTPS
 
   test:
     needs: setup

@@ -40,10 +40,11 @@ defmodule Sable.Sets do
       [%Set{}, ...]
 
   """
-  def list_sets(%Scope{user: %{id: user_id}}, exercise_id) do
+  def list_sets(%Scope{user: %{id: user_id}}, params) do
     Set
-    |> where(user_id: ^user_id, exercise_id: ^exercise_id)
+    |> where(user_id: ^user_id, exercise_id: ^params["exercise_id"])
     |> order_by([s], desc: s.inserted_at)
+    |> limit(^params["limit"])
     |> Repo.all()
   end
 

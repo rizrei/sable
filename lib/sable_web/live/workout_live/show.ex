@@ -14,7 +14,7 @@ defmodule SableWeb.WorkoutLive.Show do
           <.button navigate={~p"/workouts"}>
             <.icon name="hero-arrow-left" />
           </.button>
-          <.button variant="primary" navigate={~p"/workouts/#{@workout}/edit?return_to=show"}>
+          <.button variant="primary" navigate={~p"/workouts/#{@workout}/edit?&return_to=show"}>
             <.icon name="hero-pencil-square" /> Edit workout
           </.button>
         </:actions>
@@ -30,22 +30,12 @@ defmodule SableWeb.WorkoutLive.Show do
       <.table
         id="workout_exercises"
         rows={@streams.workout_exercises}
-        row_click={
-          fn {_id, workout_exercises} ->
-            JS.navigate(
-              ~p"/exercises/#{workout_exercises.exercise_id}/sets/?workout_id=#{@workout.id}"
-            )
-          end
-        }
+        row_click={fn {_id, workout_exercise} -> JS.navigate(sets_path(workout_exercise)) end}
       >
         <:col :let={{_id, workout_exercise}} label="Position">{workout_exercise.position}</:col>
         <:col :let={{_id, workout_exercise}} label="Title">{workout_exercise.exercise.title}</:col>
         <:action :let={{_id, workout_exercise}}>
-          <.button navigate={
-            ~p"/exercises/#{workout_exercise.exercise_id}/sets/?workout_id=#{@workout.id}"
-          }>
-            Add Set
-          </.button>
+          <.button navigate={sets_path(workout_exercise)}>Add Set</.button>
         </:action>
       </.table>
     </Layouts.app>
@@ -62,5 +52,9 @@ defmodule SableWeb.WorkoutLive.Show do
      |> assign(:page_title, "Show Workout")
      |> assign(:workout, workout)
      |> stream(:workout_exercises, workout_exercises)}
+  end
+
+  defp sets_path(workout_exercise) do
+    ~p"/exercises/#{workout_exercise.exercise_id}/sets/?limit=5&workout_id=#{workout_exercise.workout_id}"
   end
 end
