@@ -1,4 +1,8 @@
 defmodule SableWeb.UserAuth do
+  @moduledoc """
+  Handles user authentication and session management.
+  """
+
   use SableWeb, :verified_routes
 
   import Plug.Conn

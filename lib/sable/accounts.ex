@@ -4,9 +4,10 @@ defmodule Sable.Accounts do
   """
 
   import Ecto.Query, warn: false
+
   alias Sable.Repo
 
-  alias Sable.Accounts.{User, UserToken, UserNotifier}
+  alias Sable.Accounts.{User, UserNotifier, UserToken}
 
   ## Database getters
 

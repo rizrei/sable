@@ -1,6 +1,11 @@
 defmodule Sable.Accounts.UserToken do
+  @moduledoc """
+  The UserToken schema.
+  """
   use Ecto.Schema
+
   import Ecto.Query
+
   alias Sable.Accounts.UserToken
 
   @hash_algorithm :sha256

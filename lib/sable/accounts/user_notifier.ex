@@ -1,8 +1,12 @@
 defmodule Sable.Accounts.UserNotifier do
+  @moduledoc """
+  Module for sending user notifications via email.
+  """
+
   import Swoosh.Email
 
-  alias Sable.Mailer
   alias Sable.Accounts.User
+  alias Sable.Mailer
 
   # Delivers the email using the application mailer.
   defp deliver(recipient, subject, body) do

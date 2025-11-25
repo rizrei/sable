@@ -1,5 +1,10 @@
 defmodule Sable.Accounts.User do
+  @moduledoc """
+  The User schema.
+  """
+
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @primary_key {:id, :binary_id, autogenerate: true}
