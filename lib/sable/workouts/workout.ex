@@ -16,7 +16,7 @@ defmodule Sable.Workouts.Workout do
     field :title, :string
     field :description, :string
 
-    belongs_to :author, Sable.User
+    belongs_to :author, Sable.Accounts.User
 
     has_many :workout_exercises, Sable.Workouts.WorkoutExercise, on_replace: :delete
     has_many :workout_tags, Sable.Workouts.WorkoutTag, on_replace: :delete

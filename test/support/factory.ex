@@ -3,14 +3,14 @@ defmodule Sable.Factory do
 
   use ExMachina.Ecto, repo: Sable.Repo
 
-  use Sable.Factories.{
-    ExerciseFactory,
-    MetricFactory,
-    ExerciseMetricFactory,
-    TagFactory,
-    UserFactory,
-    WorkoutFactory,
-    WorkoutTagFactory,
-    WorkoutExerciseFactory
-  }
+  # use Sable.Factories.{
+  #   ExerciseFactory,
+  #   MetricFactory,
+  #   ExerciseMetricFactory,
+  #   TagFactory,
+  #   UserFactory,
+  #   WorkoutFactory,
+  #   WorkoutTagFactory,
+  #   WorkoutExerciseFactory
+  # }
 end

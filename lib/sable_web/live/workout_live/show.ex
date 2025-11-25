@@ -2,6 +2,7 @@ defmodule SableWeb.WorkoutLive.Show do
   use SableWeb, :live_view
 
   alias Sable.Workouts
+  alias Sable.Repo
 
   @impl true
   def render(assigns) do
@@ -24,15 +25,34 @@ defmodule SableWeb.WorkoutLive.Show do
         <:item title="Title">{@workout.title}</:item>
         <:item title="Description">{@workout.description}</:item>
       </.list>
+
+      <hr />
+      <h1>Exercises</h1>
+      <.table
+        id="workout_exercises"
+        rows={@streams.workout_exercises}
+        row_click={
+          fn {_id, workout_exercises} ->
+            JS.navigate(~p"/workouts/#{workout_exercises.workout_id}")
+          end
+        }
+      >
+        <:col :let={{_id, workout_exercise}} label="Position">{workout_exercise.position}</:col>
+        <:col :let={{_id, workout_exercise}} label="Title">{workout_exercise.exercise.title}</:col>
+      </.table>
     </Layouts.app>
     """
   end
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
+    workout = Workouts.get_workout!(id) |> Repo.preload(workout_exercises: :exercise)
+    workout_exercises = workout.workout_exercises
+
     {:ok,
      socket
      |> assign(:page_title, "Show Workout")
-     |> assign(:workout, Workouts.get_workout!(id))}
+     |> assign(:workout, workout)
+     |> stream(:workout_exercises, workout_exercises)}
   end
 end

@@ -4,14 +4,17 @@ alias Sable.{
   Exercises.Exercise,
   Exercises.ExerciseMetric,
   Exercises.Metric,
-  User,
+  Accounts.User,
   Tag,
   Workouts.Workout,
   Workouts.WorkoutTag,
   Workouts.WorkoutExercise
 }
 
-user = %User{first_name: "Dima", last_name: "F", phone: "+79999999999"} |> Repo.insert!()
+user =
+  %User{email: "test@example.com", hashed_password: Bcrypt.hash_pwd_salt("Passw0rd")}
+  |> Repo.insert!()
+
 reps_metric = %Metric{title: "Reps", unit: "quantity"} |> Repo.insert!()
 weight_metric = %Metric{title: "Weight", unit: "kg"} |> Repo.insert!()
 distance_metric = %Metric{title: "Distance", unit: "meter"} |> Repo.insert!()
