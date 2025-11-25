@@ -2,22 +2,21 @@ alias Sable.Repo
 
 alias Sable.{
   Exercises.Exercise,
-  Exercises.ExerciseMetric,
-  Exercises.Metric,
   Accounts.User,
   Tag,
   Workouts.Workout,
   Workouts.WorkoutTag,
-  Workouts.WorkoutExercise
+  Workouts.WorkoutExercise,
+  Sets.Set
 }
 
 user =
   %User{email: "test@example.com", hashed_password: Bcrypt.hash_pwd_salt("Passw0rd")}
   |> Repo.insert!()
 
-reps_metric = %Metric{title: "Reps", unit: "quantity"} |> Repo.insert!()
-weight_metric = %Metric{title: "Weight", unit: "kg"} |> Repo.insert!()
-distance_metric = %Metric{title: "Distance", unit: "meter"} |> Repo.insert!()
+# rep_metric = %Metric{title: "rep", unit: "quantity"} |> Repo.insert!()
+# weight_metric = %Metric{title: "Weight", unit: "kg"} |> Repo.insert!()
+# distance_metric = %Metric{title: "Distance", unit: "meter"} |> Repo.insert!()
 gym_tag = %Tag{title: "Gym", color: "#b93559"}
 cardio_tag = %Tag{title: "Cardio", color: "#7892cd"}
 legs_tag = %Tag{title: "Legs", color: "#a80b70"}
@@ -28,29 +27,21 @@ monday_tag = %Tag{title: "Monday", color: "#ff6f6f"}
 barbell_bench_press_exercise =
   %Exercise{
     title: "Barbell bench press",
-    exercise_metrics: [
-      %ExerciseMetric{metric: reps_metric},
-      %ExerciseMetric{metric: weight_metric}
-    ]
+    metrics: [:rep, :weight]
   }
   |> Repo.insert!()
 
 push_up_exercise =
   %Exercise{
     title: "Push-up",
-    exercise_metrics: [
-      %ExerciseMetric{metric: reps_metric}
-    ]
+    metrics: [:rep]
   }
   |> Repo.insert!()
 
 deadlift_exercise =
   %Exercise{
     title: "Deadlift",
-    exercise_metrics: [
-      %ExerciseMetric{metric: reps_metric},
-      %ExerciseMetric{metric: weight_metric}
-    ]
+    metrics: [:rep, :weight]
   }
   |> Repo.insert!()
 
@@ -70,3 +61,31 @@ workout =
     ]
   }
   |> Repo.insert!()
+
+%Set{
+  user: user,
+  exercise: push_up_exercise,
+  metrics: %Sable.SetMetrics{rep: 10}
+}
+|> Repo.insert!()
+
+%Set{
+  user: user,
+  exercise: push_up_exercise,
+  metrics: %Sable.SetMetrics{rep: 20}
+}
+|> Repo.insert!()
+
+%Set{
+  user: user,
+  exercise: barbell_bench_press_exercise,
+  metrics: %Sable.SetMetrics{rep: 10, weight: 100}
+}
+|> Repo.insert!()
+
+%Set{
+  user: user,
+  exercise: barbell_bench_press_exercise,
+  metrics: %Sable.SetMetrics{rep: 8, weight: 120}
+}
+|> Repo.insert!()

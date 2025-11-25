@@ -11,10 +11,10 @@ defmodule Sable.Exercises.Exercise do
   @foreign_key_type :binary_id
   schema "exercises" do
     field :title, :string
+    field :metrics, {:array, Ecto.Enum}, values: [:rep, :weight, :distance]
 
-    has_many :exercise_metrics, Sable.Exercises.ExerciseMetric
+    has_many :sets, Sable.Sets.Set
     has_many :workout_exercises, Sable.Workouts.WorkoutExercise
-    has_many :metrics, through: [:exercise_metrics, :metric]
     has_many :workouts, through: [:workout_exercises, :workout]
 
     timestamps(type: :utc_datetime)
@@ -23,7 +23,7 @@ defmodule Sable.Exercises.Exercise do
   @doc false
   def changeset(exercise, attrs) do
     exercise
-    |> cast(attrs, [:title])
-    |> validate_required([:title])
+    |> cast(attrs, [:title, :metrics])
+    |> validate_required([:title, :metrics])
   end
 end
