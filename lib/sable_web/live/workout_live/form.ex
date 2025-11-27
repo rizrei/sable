@@ -3,7 +3,7 @@ defmodule SableWeb.WorkoutLive.Form do
 
   alias Sable.Repo
   alias Sable.Workouts
-  alias Sable.Workouts.Workout
+  alias Sable.Workouts.{Workout, WorkoutExercise}
 
   @impl true
   def render(assigns) do
@@ -19,19 +19,77 @@ defmodule SableWeb.WorkoutLive.Form do
         <.input field={@form[:description]} type="textarea" label="Description" />
 
         <LiveSelect.live_select
+          id="workout-tag-ids-live-select"
           field={@form[:tag_ids]}
           options={Enum.map(@tags, &{&1.title, &1.id})}
           value={@selected_tag_ids}
           style={:daisyui}
           mode={:tags}
           placeholder="Search for a tag"
-          keep_options_on_select
           user_defined_options={true}
-          dropdown_extra_class="max-h-60 overflow-y-scroll"
+          dropdown_extra_class="max-h-30 overflow-y-scroll"
           tag_extra_class="badge badge-primary p-1.5 text-sm"
           max_selectable={5}
           update_min_len={1}
         />
+
+        <div id="workout-exercises-inputs" phx-hook="SortableInputsFor">
+          <.inputs_for :let={workout_exercises_form} field={@form[:workout_exercises]}>
+            <div class="flex items-center mt-4 mb-2 space-x-2">
+              <div class="flex items-center space-x-2">
+                <.icon name="hero-bars-3" class="cursor-pointer relative w-5 h-5" />
+                <div class="h-5 leading-5">{workout_exercises_form.index + 1}</div>
+                <.input
+                  hidden={true}
+                  field={workout_exercises_form[:position]}
+                  value={workout_exercises_form.index + 1}
+                />
+              </div>
+
+              <div class="grow">
+                <input
+                  type="hidden"
+                  name="workout[workout_exercises_sort][]"
+                  value={workout_exercises_form.index}
+                />
+
+                <LiveSelect.live_select
+                  id={"workout-exercise-id-live-select-#{workout_exercises_form.index}"}
+                  field={workout_exercises_form[:exercise_id]}
+                  value={workout_exercises_form[:exercise_id].value}
+                  options={Enum.map(@exercises, &{&1.title, &1.id})}
+                  style={:daisyui}
+                  placeholder="Select exercise"
+                  dropdown_extra_class="max-h-30 overflow-y-scroll"
+                  tag_extra_class="badge badge-primary p-1.5 text-sm"
+                  max_selectable={5}
+                  update_min_len={1}
+                />
+              </div>
+
+              <button
+                type="button"
+                name="workout[workout_exercises_drop][]"
+                value={workout_exercises_form.index}
+                phx-click={JS.dispatch("change")}
+                class="flex items-center justify-center"
+              >
+                <.icon name="hero-x-mark" class="w-6 h-6" />
+              </button>
+            </div>
+          </.inputs_for>
+
+          <input type="hidden" name="workout[workout_exercises_drop][]" />
+
+          <.button
+            type="button"
+            name="workout[workout_exercises_sort][]"
+            value="new"
+            phx-click={JS.dispatch("change")}
+          >
+            Add Exercise
+          </.button>
+        </div>
 
         <div class="flex gap-2 mt-4">
           <.button phx-disable-with="Saving..." variant="primary">Save Workout</.button>
@@ -48,6 +106,7 @@ defmodule SableWeb.WorkoutLive.Form do
      socket
      |> assign(:return_to, return_to(params["return_to"]))
      |> assign(:tags, Sable.Tags.list_tags())
+     |> assign(:exercises, Sable.Exercises.Exercise |> Repo.all())
      |> apply_action(socket.assigns.live_action, params)}
   end
 
@@ -55,7 +114,7 @@ defmodule SableWeb.WorkoutLive.Form do
   defp return_to(_), do: "index"
 
   defp apply_action(socket, :edit, %{"id" => id}) do
-    workout = Workouts.get_workout!(id) |> Repo.preload([:tags, :workout_exercises])
+    workout = Workouts.get_workout!(id) |> Repo.preload([:tags, workout_exercises: :exercise])
 
     socket
     |> assign(:page_title, "Edit Workout")
@@ -65,7 +124,7 @@ defmodule SableWeb.WorkoutLive.Form do
   end
 
   defp apply_action(socket, :new, _params) do
-    workout = %Workout{tags: [], workout_exercises: []}
+    workout = %Workout{tags: [], workout_exercises: [%WorkoutExercise{}]}
 
     socket
     |> assign(:page_title, "New Workout")
@@ -75,10 +134,25 @@ defmodule SableWeb.WorkoutLive.Form do
   end
 
   @impl true
-  def handle_event("live_select_change", %{"id" => id, "text" => text}, socket) do
-    options =
-      Sable.Tags.search(text)
-      |> Enum.map(&{&1.title, &1.id})
+  def handle_event(
+        "live_select_change",
+        %{"id" => id, "text" => text, "field" => "workout_tag_ids"},
+        socket
+      ) do
+    options = Sable.Tags.search(text) |> Enum.map(&{&1.title, &1.id})
+
+    send_update(LiveSelect.Component, id: id, options: options)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event(
+        "live_select_change",
+        %{"id" => id, "text" => text, "field" => "workout_exercise_id"},
+        socket
+      ) do
+    options = Sable.Exercises.search(text) |> Enum.map(&{&1.title, &1.id})
 
     send_update(LiveSelect.Component, id: id, options: options)
 
@@ -91,6 +165,7 @@ defmodule SableWeb.WorkoutLive.Form do
 
     socket =
       socket
+      # |> reorder_workout_exercises(workout_params)
       |> assign(:selected_tag_ids, Map.get(workout_params, "tag_ids", []))
       |> assign(form: to_form(changeset, action: :validate))
 
@@ -142,4 +217,32 @@ defmodule SableWeb.WorkoutLive.Form do
   defp maybe_empty_tag_ids(params), do: params
 
   defp workout_form(workout), do: workout |> Workouts.change_workout() |> to_form()
+
+  # defp reorder_workout_exercises(
+  #        socket,
+  #        %{
+  #          "workout_exercises_sort" => sort_order,
+  #          "workout_exercises" => workout_exercises
+  #        }
+  #      ) do
+  #   order = Enum.map(sort_order, &workout_exercises[&1]["id"])
+
+  #   socket.assigns.workout.workout_exercises
+  #   |> Enum.map(& &1.id)
+  #   |> IO.inspect(label: "unordered_ids")
+
+  #   IO.inspect(order, label: "order")
+
+  #   order_fun = &Enum.find_index(order, fn oid -> oid == &1 end)
+
+  #   workout_exercises =
+  #     Enum.sort_by(socket.assigns.workout.workout_exercises, &order_fun.(&1.id))
+
+  #   Enum.map(workout_exercises, & &1.id) |> IO.inspect(label: "ordered_ids")
+
+  #   workout =
+  #     %{socket.assigns.workout | workout_exercises: workout_exercises}
+
+  #   assign(socket, :workout, workout)
+  # end
 end
