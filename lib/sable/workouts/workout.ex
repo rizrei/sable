@@ -32,23 +32,23 @@ defmodule Sable.Workouts.Workout do
 
   @doc false
   def changeset(workout, attrs) do
-    # |> cast_assoc(:workout_tags,
-    #   with: &workout_tag_changeset/2,
-    #   sort_param: :workout_tags_sort,
-    #   drop_param: :workout_tags_drop,
-    #   required: false
-    # )
-    # |> cast_assoc(:workout_exercises,
-    #   with: &workout_exercise_changeset/2,
-    #   sort_param: :workout_exercises_sort,
-    #   drop_param: :workout_exercises_drop,
-    #   required: false
-    # )
     workout
     |> cast(attrs, [:title, :description, :author_id])
     |> put_assoc_tags(attrs)
+    |> cast_assoc(:workout_exercises,
+      with: &workout_exercise_changeset/2,
+      sort_param: :workout_exercises_sort,
+      drop_param: :workout_exercises_drop,
+      required: false
+    )
     |> validate_required([:title, :description, :author_id])
     |> foreign_key_constraint(:author_id)
+  end
+
+  defp workout_exercise_changeset(workout_exercise, attrs) do
+    workout_exercise
+    |> cast(attrs, [:exercise_id, :position])
+    |> validate_required([:exercise_id, :position])
   end
 
   defp put_assoc_tags(changeset, %{"tag_ids" => tag_ids}) do
