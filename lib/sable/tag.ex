@@ -11,7 +11,7 @@ defmodule Sable.Tag do
   @foreign_key_type :binary_id
   schema "tags" do
     field :title, :string
-    field :color, :string, default: "#FFFFFF"
+    field :color, :string, default: "#00FFFF"
 
     has_many :workout_tags, Sable.Workouts.WorkoutTag
     has_many :workouts, through: [:workout_tags, :workout]

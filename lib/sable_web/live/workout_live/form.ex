@@ -18,89 +18,25 @@ defmodule SableWeb.WorkoutLive.Form do
         <.input field={@form[:title]} type="text" label="Title" />
         <.input field={@form[:description]} type="textarea" label="Description" />
 
-        <div id="tags-inputs">
-          <.inputs_for :let={workout_tag} field={@form[:workout_tags]}>
-            <div class="flex items-center mt-4 mb-2 space-x-2">
-              <input type="hidden" name="workout[workout_tags_sort][]" value={workout_tag.index} />
-              <.input
-                field={workout_tag[:tag_id]}
-                type="select"
-                label="Tag"
-                options={Enum.map(@tags, &{&1.title, &1.id})}
-              />
-              <button
-                type="button"
-                name="workout[workout_tags_drop][]"
-                value={workout_tag.index}
-                phx-click={JS.dispatch("change")}
-              >
-                <.icon name="hero-x-mark" class="w-6 h-6 relative top-2" />
-              </button>
-            </div>
-          </.inputs_for>
+        <LiveSelect.live_select
+          field={@form[:tag_ids]}
+          options={Enum.map(@tags, &{&1.title, &1.id})}
+          value={@selected_tag_ids}
+          style={:daisyui}
+          mode={:tags}
+          placeholder="Search for a tag"
+          keep_options_on_select
+          user_defined_options={true}
+          dropdown_extra_class="max-h-60 overflow-y-scroll"
+          tag_extra_class="badge badge-primary p-1.5 text-sm"
+          max_selectable={5}
+          update_min_len={1}
+        />
 
-          <input type="hidden" name="workout[workout_tags_drop][]" />
-
-          <.button
-            type="button"
-            name="workout[workout_tags_sort][]"
-            value="new"
-            phx-click={JS.dispatch("change")}
-          >
-            Add Tag
-          </.button>
-        </div>
-
-        <div id="exercises-inputs">
-          <.inputs_for :let={workout_exercise} field={@form[:workout_exercises]}>
-            <div class="flex items-center mt-4 mb-2 space-x-2">
-              <input
-                type="hidden"
-                name="workout[workout_exercises_sort][]"
-                value={workout_exercise.index}
-              />
-
-              <.input
-                field={workout_exercise[:position]}
-                type="number"
-                min="1"
-                label="Position"
-                required="true"
-              />
-
-              <.input
-                field={workout_exercise[:exercise_id]}
-                type="select"
-                label="Exercise"
-                options={Enum.map(@exercises, &{&1.title, &1.id})}
-              />
-              <button
-                type="button"
-                name="workout[workout_exercises_drop][]"
-                value={workout_exercise.index}
-                phx-click={JS.dispatch("change")}
-              >
-                <.icon name="hero-x-mark" class="w-6 h-6 relative top-2" />
-              </button>
-            </div>
-          </.inputs_for>
-
-          <input type="hidden" name="workout[workout_exercises_drop][]" />
-
-          <.button
-            type="button"
-            name="workout[workout_exercises_sort][]"
-            value="new"
-            phx-click={JS.dispatch("change")}
-          >
-            Add Exercise
-          </.button>
-        </div>
-
-        <footer>
+        <div class="flex gap-2 mt-4">
           <.button phx-disable-with="Saving..." variant="primary">Save Workout</.button>
           <.button navigate={return_path(@return_to, @workout)}>Cancel</.button>
-        </footer>
+        </div>
       </.form>
     </Layouts.app>
     """
@@ -111,6 +47,7 @@ defmodule SableWeb.WorkoutLive.Form do
     {:ok,
      socket
      |> assign(:return_to, return_to(params["return_to"]))
+     |> assign(:tags, Sable.Tags.list_tags())
      |> apply_action(socket.assigns.live_action, params)}
   end
 
@@ -123,26 +60,41 @@ defmodule SableWeb.WorkoutLive.Form do
     socket
     |> assign(:page_title, "Edit Workout")
     |> assign(:workout, workout)
-    |> assign(:tags, Sable.Tag |> Repo.all())
-    |> assign(:exercises, Sable.Exercises.Exercise |> Repo.all())
-    |> assign(:form, workout |> Workouts.change_workout() |> to_form())
+    |> assign(:selected_tag_ids, Enum.map(workout.tags, & &1.id))
+    |> assign(:form, workout_form(workout))
   end
 
   defp apply_action(socket, :new, _params) do
-    workout = %Workout{workout_tags: [], workout_exercises: []}
+    workout = %Workout{tags: [], workout_exercises: []}
 
     socket
     |> assign(:page_title, "New Workout")
     |> assign(:workout, workout)
-    |> assign(:tags, Sable.Tag |> Repo.all())
-    |> assign(:exercises, Sable.Exercises.Exercise |> Repo.all())
-    |> assign(:form, workout |> Workouts.change_workout() |> to_form())
+    |> assign(:selected_tag_ids, Enum.map(workout.tags, & &1.id))
+    |> assign(:form, workout_form(workout))
+  end
+
+  @impl true
+  def handle_event("live_select_change", %{"id" => id, "text" => text}, socket) do
+    options =
+      Sable.Tags.search(text)
+      |> Enum.map(&{&1.title, &1.id})
+
+    send_update(LiveSelect.Component, id: id, options: options)
+
+    {:noreply, socket}
   end
 
   @impl true
   def handle_event("validate", %{"workout" => workout_params}, socket) do
     changeset = Workouts.change_workout(socket.assigns.workout, workout_params)
-    {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
+
+    socket =
+      socket
+      |> assign(:selected_tag_ids, Map.get(workout_params, "tag_ids", []))
+      |> assign(form: to_form(changeset, action: :validate))
+
+    {:noreply, socket}
   end
 
   def handle_event("save", %{"workout" => workout_params}, socket) do
@@ -150,12 +102,14 @@ defmodule SableWeb.WorkoutLive.Form do
   end
 
   defp save_workout(socket, :edit, workout_params) do
+    workout_params = maybe_empty_tag_ids(workout_params)
+
     case Workouts.update_workout(socket.assigns.workout, workout_params) do
       {:ok, workout} ->
         {:noreply,
          socket
          |> put_flash(:info, "Workout updated successfully")
-         |> push_navigate(to: return_path(socket.assigns.return_to, workout))}
+         |> push_navigate(to: ~p"/workouts/#{workout}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
@@ -163,14 +117,16 @@ defmodule SableWeb.WorkoutLive.Form do
   end
 
   defp save_workout(socket, :new, workout_params) do
-    workout_params = Map.put(workout_params, "author_id", socket.assigns.current_scope.user.id)
+    workout_params =
+      workout_params
+      |> Map.put("author_id", socket.assigns.current_scope.user.id)
 
     case Workouts.create_workout(workout_params) do
       {:ok, workout} ->
         {:noreply,
          socket
          |> put_flash(:info, "Workout created successfully")
-         |> push_navigate(to: return_path(socket.assigns.return_to, workout))}
+         |> push_navigate(to: ~p"/workouts/#{workout}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
@@ -179,4 +135,11 @@ defmodule SableWeb.WorkoutLive.Form do
 
   defp return_path("index", _workout), do: ~p"/workouts"
   defp return_path("show", workout), do: ~p"/workouts/#{workout}"
+
+  defp maybe_empty_tag_ids(params) when is_map_key(params, "tag_ids_empty_selection"),
+    do: Map.put(params, "tag_ids", [])
+
+  defp maybe_empty_tag_ids(params), do: params
+
+  defp workout_form(workout), do: workout |> Workouts.change_workout() |> to_form()
 end
