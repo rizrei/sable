@@ -24,9 +24,11 @@ defmodule SableWeb.WorkoutLive.Index do
         row_click={fn {_id, workout} -> JS.navigate(~p"/workouts/#{workout}") end}
       >
         <:col :let={{_id, workout}} label="Title">{workout.title}</:col>
-        <:col :let={{_id, workout}} label="Description">{workout.description}</:col>
         <:col :let={{_id, workout}} label="Tags">
           <.tags_list tags={workout.tags} />
+        </:col>
+        <:col :let={{_id, workout}} label="Exercises">
+          {Enum.count(workout.workout_exercises)}
         </:col>
         <:action :let={{_id, workout}}>
           <div class="sr-only">
@@ -52,7 +54,7 @@ defmodule SableWeb.WorkoutLive.Index do
     {:ok,
      socket
      |> assign(:page_title, "Listing Workouts")
-     |> stream(:workouts, Workouts.list_workouts() |> Repo.preload([:tags]))}
+     |> stream(:workouts, Workouts.list_workouts() |> Repo.preload([:tags, :workout_exercises]))}
   end
 
   @impl true

@@ -2,8 +2,11 @@ defmodule SableWeb.WorkoutLive.Form do
   use SableWeb, :live_view
 
   alias Sable.Repo
+  alias Sable.Tags
   alias Sable.Workouts
   alias Sable.Workouts.{Workout, WorkoutExercise}
+  alias Sable.Exercises
+  alias Sable.Exercises.Exercise
 
   @impl true
   def render(assigns) do
@@ -11,7 +14,6 @@ defmodule SableWeb.WorkoutLive.Form do
     <Layouts.app flash={@flash}>
       <.header>
         {@page_title}
-        <:subtitle>Use this form to manage workout records in your database.</:subtitle>
       </.header>
 
       <.form for={@form} id="workout-form" phx-change="validate" phx-submit="save">
@@ -26,6 +28,7 @@ defmodule SableWeb.WorkoutLive.Form do
           style={:daisyui}
           mode={:tags}
           placeholder="Search for a tag"
+          keep_options_on_select={true}
           user_defined_options={true}
           dropdown_extra_class="max-h-30 overflow-y-scroll"
           tag_extra_class="badge badge-primary p-1.5 text-sm"
@@ -60,7 +63,7 @@ defmodule SableWeb.WorkoutLive.Form do
                   options={Enum.map(@exercises, &{&1.title, &1.id})}
                   style={:daisyui}
                   placeholder="Select exercise"
-                  dropdown_extra_class="max-h-30 overflow-y-scroll"
+                  dropdown_extra_class="max-h-40 overflow-y-auto flex flex-col"
                   tag_extra_class="badge badge-primary p-1.5 text-sm"
                   max_selectable={5}
                   update_min_len={1}
@@ -81,14 +84,20 @@ defmodule SableWeb.WorkoutLive.Form do
 
           <input type="hidden" name="workout[workout_exercises_drop][]" />
 
-          <.button
-            type="button"
-            name="workout[workout_exercises_sort][]"
-            value="new"
-            phx-click={JS.dispatch("change")}
-          >
-            Add Exercise
-          </.button>
+          <div class="flex justify-between mt-4">
+            <.button
+              type="button"
+              name="workout[workout_exercises_sort][]"
+              value="new"
+              phx-click={JS.dispatch("change")}
+            >
+              Add Exercise
+            </.button>
+
+            <.button :if={!@show_new_exercise_form} type="button" phx-click="show_new_exercise_form">
+              Create Exercise
+            </.button>
+          </div>
         </div>
 
         <div class="flex gap-2 mt-4">
@@ -96,17 +105,54 @@ defmodule SableWeb.WorkoutLive.Form do
           <.button navigate={return_path(@return_to, @workout)}>Cancel</.button>
         </div>
       </.form>
+
+      <div :if={@show_new_exercise_form} class="border rounded shadow bg-white mt-4 p-4">
+        <.form
+          for={@new_exercise_form}
+          id="new-exercise-form"
+          phx-change="validate"
+          phx-submit="save"
+        >
+          <.input
+            field={@new_exercise_form[:title]}
+            type="text"
+            label=""
+            placeholder="Title"
+            autocomplete="off"
+          />
+
+          <LiveSelect.live_select
+            id="new-exercise-form-live-select"
+            field={@new_exercise_form[:metrics]}
+            options={Ecto.Enum.values(Exercise, :metrics)}
+            style={:daisyui}
+            mode={:tags}
+            keep_options_on_select={true}
+            placeholder="Metrics"
+            dropdown_extra_class="max-h-30 overflow-y-scroll"
+            tag_extra_class="badge badge-primary p-1.5 text-sm"
+            max_selectable={5}
+            update_min_len={1}
+          />
+
+          <.button type="submit">Save Exercise</.button>
+          <.button type="button" phx-click="show_new_exercise_form">Cancel</.button>
+        </.form>
+      </div>
     </Layouts.app>
     """
   end
 
   @impl true
   def mount(params, _session, socket) do
+    if connected?(socket), do: Exercises.subscribe_exercises()
+
     {:ok,
      socket
      |> assign(:return_to, return_to(params["return_to"]))
-     |> assign(:tags, Sable.Tags.list_tags())
-     |> assign(:exercises, Sable.Exercises.Exercise |> Repo.all())
+     |> assign(:tags, Tags.list_tags())
+     |> assign(:exercises, Exercises.list_exercises(limit: 25))
+     |> assign(:show_new_exercise_form, false)
      |> apply_action(socket.assigns.live_action, params)}
   end
 
@@ -149,12 +195,27 @@ defmodule SableWeb.WorkoutLive.Form do
   @impl true
   def handle_event(
         "live_select_change",
-        %{"id" => id, "text" => text, "field" => "workout_exercise_id"},
+        %{"id" => id, "text" => text, "field" => "workout_workout_exercises_" <> _rest},
         socket
       ) do
-    options = Sable.Exercises.search(text) |> Enum.map(&{&1.title, &1.id})
+    options = Exercises.search(text) |> Enum.map(&{&1.title, &1.id})
 
     send_update(LiveSelect.Component, id: id, options: options)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("live_select_change", %{"field" => "exercise_metrics"}, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("show_new_exercise_form", _params, socket) do
+    socket =
+      socket
+      |> update(:show_new_exercise_form, &(!&1))
+      |> assign(:new_exercise_form, new_exercise_form(%Exercise{}))
 
     {:noreply, socket}
   end
@@ -172,8 +233,39 @@ defmodule SableWeb.WorkoutLive.Form do
     {:noreply, socket}
   end
 
+  @impl true
+  def handle_event("validate", %{"exercise" => exercise_params}, socket) do
+    changeset = Exercises.change_exercise(%Exercise{}, exercise_params)
+
+    socket =
+      socket
+      |> assign(:new_exercise_form, to_form(changeset, action: :validate))
+
+    {:noreply, socket}
+  end
+
+  def handle_event("save", %{"exercise" => exercise_params}, socket) do
+    case Exercises.create_exercise(exercise_params) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> assign(show_new_exercise_form: false)
+         |> assign(:new_exercise_form, new_exercise_form(%Exercise{}))
+         |> put_flash(:info, "Exercise created successfully")}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, new_exercise_form: to_form(changeset))}
+    end
+  end
+
   def handle_event("save", %{"workout" => workout_params}, socket) do
     save_workout(socket, socket.assigns.live_action, workout_params)
+  end
+
+  @impl true
+  def handle_info({:created, %Exercise{} = exercise}, socket) do
+    socket = update(socket, :exercises, &Enum.sort_by([exercise | &1], fn e -> e.title end))
+    {:noreply, socket}
   end
 
   defp save_workout(socket, :edit, workout_params) do
@@ -217,6 +309,7 @@ defmodule SableWeb.WorkoutLive.Form do
   defp maybe_empty_tag_ids(params), do: params
 
   defp workout_form(workout), do: workout |> Workouts.change_workout() |> to_form()
+  defp new_exercise_form(exercise), do: exercise |> Exercises.change_exercise() |> to_form()
 
   # defp reorder_workout_exercises(
   #        socket,

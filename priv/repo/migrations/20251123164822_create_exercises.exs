@@ -10,6 +10,6 @@ defmodule Sable.Repo.Migrations.CreateExercises do
       timestamps(type: :utc_datetime)
     end
 
-    create index(:exercises, [:title])
+    create unique_index(:exercises, [:title])
   end
 end

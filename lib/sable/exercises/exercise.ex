@@ -11,7 +11,7 @@ defmodule Sable.Exercises.Exercise do
   @foreign_key_type :binary_id
   schema "exercises" do
     field :title, :string
-    field :metrics, {:array, Ecto.Enum}, values: [:rep, :weight, :distance]
+    field :metrics, {:array, Ecto.Enum}, values: [:rep, :weight, :distance, :time]
 
     has_many :sets, Sable.Sets.Set
     has_many :workout_exercises, Sable.Workouts.WorkoutExercise
@@ -25,5 +25,6 @@ defmodule Sable.Exercises.Exercise do
     exercise
     |> cast(attrs, [:title, :metrics])
     |> validate_required([:title, :metrics])
+    |> unique_constraint(:title)
   end
 end
