@@ -9,7 +9,6 @@ defmodule SableWeb.WorkoutLive.Show do
     <Layouts.app flash={@flash}>
       <.header>
         Workout {@workout.title}
-        <:subtitle>This is a workout record from your database.</:subtitle>
         <:actions>
           <.button navigate={~p"/workouts"}>
             <.icon name="hero-arrow-left" />
@@ -21,23 +20,23 @@ defmodule SableWeb.WorkoutLive.Show do
       </.header>
 
       <.list>
-        <:item title="Title">{@workout.title}</:item>
         <:item title="Description">{@workout.description}</:item>
+        <:item title="Exercises">
+          <.table
+            id="workout_exercises"
+            rows={@streams.workout_exercises}
+            row_click={fn {_id, workout_exercise} -> JS.navigate(sets_path(workout_exercise)) end}
+          >
+            <:col :let={{_id, workout_exercise}} label="Position">{workout_exercise.position}</:col>
+            <:col :let={{_id, workout_exercise}} label="Title">
+              {workout_exercise.exercise.title}
+            </:col>
+            <:action :let={{_id, workout_exercise}}>
+              <.button navigate={sets_path(workout_exercise)}>Add Set</.button>
+            </:action>
+          </.table>
+        </:item>
       </.list>
-
-      <hr />
-      <h1>Exercises</h1>
-      <.table
-        id="workout_exercises"
-        rows={@streams.workout_exercises}
-        row_click={fn {_id, workout_exercise} -> JS.navigate(sets_path(workout_exercise)) end}
-      >
-        <:col :let={{_id, workout_exercise}} label="Position">{workout_exercise.position}</:col>
-        <:col :let={{_id, workout_exercise}} label="Title">{workout_exercise.exercise.title}</:col>
-        <:action :let={{_id, workout_exercise}}>
-          <.button navigate={sets_path(workout_exercise)}>Add Set</.button>
-        </:action>
-      </.table>
     </Layouts.app>
     """
   end
