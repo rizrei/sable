@@ -5,8 +5,8 @@ defmodule Sable.Repo.Migrations.CreateWorkoutExercise do
     create table(:workout_exercise, primary_key: false) do
       add :id, :binary_id, primary_key: true
       add :position, :integer, null: false, default: 0
-      add :workout_id, references(:workouts, on_delete: :delete_all, type: :uuid)
-      add :exercise_id, references(:exercises, on_delete: :delete_all, type: :uuid)
+      add :workout_id, references(:workouts, on_delete: :delete_all, type: :uuid), null: false
+      add :exercise_id, references(:exercises, on_delete: :delete_all, type: :uuid), null: false
 
       timestamps(type: :utc_datetime)
     end

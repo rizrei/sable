@@ -34,14 +34,16 @@ barbell_bench_press_exercise =
 push_up_exercise =
   %Exercise{
     title: "Push-up",
-    metrics: [:rep]
+    metrics: [:rep],
+    author: user
   }
   |> Repo.insert!()
 
 deadlift_exercise =
   %Exercise{
     title: "Deadlift",
-    metrics: [:rep, :weight]
+    metrics: [:rep, :weight],
+    author: user
   }
   |> Repo.insert!()
 

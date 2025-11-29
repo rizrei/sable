@@ -4,8 +4,8 @@ defmodule Sable.Repo.Migrations.CreateSets do
   def change do
     create table(:sets, primary_key: false) do
       add :id, :binary_id, primary_key: true
-      add :exercise_id, references(:exercises, on_delete: :delete_all, type: :uuid)
-      add :user_id, references(:users, on_delete: :delete_all, type: :uuid)
+      add :exercise_id, references(:exercises, on_delete: :delete_all, type: :uuid), null: false
+      add :user_id, references(:users, on_delete: :delete_all, type: :uuid), null: false
       add :metrics, :map, default: %{}, null: false
 
       timestamps(type: :utc_datetime)
