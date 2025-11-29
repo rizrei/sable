@@ -61,9 +61,8 @@ defmodule SableWeb.WorkoutLive.Form do
                 />
 
                 <LiveSelect.live_select
-                  id={"workout-exercise-id-live-select-#{workout_exercises_form.index}"}
+                  id={"workout-exercise-id-live-select-#{workout_exercises_form.id}"}
                   field={workout_exercises_form[:exercise_id]}
-                  value={workout_exercises_form[:exercise_id].value}
                   options={Enum.map(@exercises, &{&1.title, &1.id})}
                   style={:daisyui}
                   placeholder="Select exercise"

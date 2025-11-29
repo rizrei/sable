@@ -25,7 +25,7 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/sable"
 import topbar from "../vendor/topbar"
 import live_select from "live_select"
-import Sortable from "../vendor/sortable"
+import Sortable from 'sortablejs';
 
 const SortableInputsFor = {
   mounted(){
