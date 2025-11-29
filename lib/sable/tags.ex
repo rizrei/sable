@@ -1,8 +1,12 @@
 defmodule Sable.Tags do
-  alias Sable.Repo
-  alias Sable.Tag
+  @moduledoc """
+  The Tags context.
+  """
 
   import Ecto.Query
+
+  alias Sable.Repo
+  alias Sable.Tag
 
   def list_tags do
     Tag |> order_by(asc: :title) |> Repo.all()

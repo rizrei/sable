@@ -8,7 +8,7 @@ defmodule Sable.Workouts.Workout do
   import Ecto.Query
   import Ecto.Changeset
 
-  alias Sable.Workouts.{WorkoutTag, WorkoutExercise}
+  alias Sable.Workouts.{WorkoutExercise, WorkoutTag}
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
