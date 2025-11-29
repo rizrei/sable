@@ -21,7 +21,7 @@ defmodule SableWeb.WorkoutLive.Form do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:title]} type="text" label="Title" />
+        <.input field={@form[:title]} type="text" label="Title" required={true} />
         <.input field={@form[:description]} type="textarea" label="Description" />
 
         <LiveSelect.live_select

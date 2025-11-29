@@ -21,8 +21,8 @@ defmodule SableWeb.SetLive.Index do
 
       <.form for={@form} id="set-form" phx-change="validate" phx-submit="save">
         <.inputs_for :let={metric_form} field={@form[:metrics]}>
-          <div class="flex space-x-4">
-            <div :for={metric <- @exercise.metrics} class="flex flex-col">
+          <div class="flex gap-2">
+            <div :for={metric <- @exercise.metrics} class="flex-1">
               <.input
                 field={metric_form[metric]}
                 type="number"
@@ -34,9 +34,13 @@ defmodule SableWeb.SetLive.Index do
           </div>
         </.inputs_for>
 
-        <footer>
-          <.button phx-disable-with="Saving..." variant="primary">Save Set</.button>
-        </footer>
+        <.button
+          class="btn btn-primary btn-soft w-full"
+          phx-disable-with="Saving..."
+          variant="primary"
+        >
+          Save Set
+        </.button>
       </.form>
 
       <.table id="sets" rows={@streams.sets}>
@@ -45,17 +49,18 @@ defmodule SableWeb.SetLive.Index do
         </:col>
         <:col :let={{_id, set}} label="Created at">{Calendar.strftime(set.inserted_at, "%c")}</:col>
         <:action :let={{id, set}}>
-          <.link
+          <.button
             phx-click={JS.push("delete", value: %{id: set.id}) |> hide("##{id}")}
             data-confirm="Are you sure?"
+            class="w-10 h-10 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-md shadow-sm"
           >
-            Delete
-          </.link>
+            <.icon name="hero-trash" class="w-5 h-5" />
+          </.button>
         </:action>
       </.table>
 
       <footer>
-        <.button variant="primary" phx-click="load-more">
+        <.button class="btn btn-primary btn-soft w-full" phx-click="load-more">
           <.icon name="hero-plus" /> Load more
         </.button>
       </footer>

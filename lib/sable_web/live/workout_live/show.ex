@@ -32,7 +32,12 @@ defmodule SableWeb.WorkoutLive.Show do
               {workout_exercise.exercise.title}
             </:col>
             <:action :let={{_id, workout_exercise}}>
-              <.button navigate={sets_path(workout_exercise)}>Add Set</.button>
+              <.button
+                class="w-10 h-10 flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md shadow-sm"
+                navigate={sets_path(workout_exercise)}
+              >
+                <.icon name="hero-plus" class="w-6 h-6 text-green-500" />
+              </.button>
             </:action>
           </.table>
         </:item>

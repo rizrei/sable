@@ -34,15 +34,22 @@ defmodule SableWeb.WorkoutLive.Index do
           <div class="sr-only">
             <.link navigate={~p"/workouts/#{workout}"}>Show</.link>
           </div>
-          <.link navigate={~p"/workouts/#{workout}/edit"}>Edit</.link>
+          <.button
+            navigate={~p"/workouts/#{workout}/edit"}
+            class="w-10 h-10 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-md shadow-sm"
+          >
+            <.icon name="hero-pencil-square" class="w-5 h-5" />
+          </.button>
         </:action>
+
         <:action :let={{id, workout}}>
-          <.link
+          <.button
             phx-click={JS.push("delete", value: %{id: workout.id}) |> hide("##{id}")}
             data-confirm="Are you sure?"
+            class="w-10 h-10 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-md shadow-sm"
           >
-            Delete
-          </.link>
+            <.icon name="hero-trash" class="w-5 h-5" />
+          </.button>
         </:action>
       </.table>
     </Layouts.app>
