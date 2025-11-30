@@ -6,7 +6,7 @@ defmodule Sable.Tags do
   import Ecto.Query
 
   alias Sable.Repo
-  alias Sable.Tag
+  alias Sable.Tags.Tag
 
   def list_tags do
     Tag |> order_by(asc: :title) |> Repo.all()
@@ -18,4 +18,6 @@ defmodule Sable.Tags do
     |> order_by(asc: :title)
     |> Repo.all()
   end
+
+  def change_tag(%Tag{} = tag, attrs \\ %{}), do: Tag.changeset(tag, attrs)
 end
