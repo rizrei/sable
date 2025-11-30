@@ -8,6 +8,8 @@ defmodule Sable.Workouts.Workout do
   import Ecto.Query
   import Ecto.Changeset
 
+  alias Sable.Tags
+  alias Sable.Tags.Tag
   alias Sable.Workouts.{WorkoutExercise, WorkoutTag}
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -25,7 +27,7 @@ defmodule Sable.Workouts.Workout do
 
     has_many :exercises, through: [:workout_exercises, :exercise]
 
-    many_to_many :tags, Sable.Tag, join_through: WorkoutTag, on_replace: :delete
+    many_to_many :tags, Tag, join_through: WorkoutTag, on_replace: :delete
 
     timestamps(type: :utc_datetime)
   end
@@ -53,9 +55,14 @@ defmodule Sable.Workouts.Workout do
 
   defp put_assoc_tags(changeset, %{"tag_ids" => tag_ids}) do
     {uuid_list, string_list} = Enum.split_with(tag_ids, &match?({:ok, _}, Ecto.UUID.cast(&1)))
-    tags = Sable.Repo.all(from t in Sable.Tag, where: t.id in ^uuid_list)
-    new_tags = Enum.map(string_list, &%Sable.Tag{title: &1})
-    put_assoc(changeset, :tags, new_tags ++ tags)
+    tags_list = Sable.Repo.all(from t in Tag, where: t.id in ^uuid_list)
+
+    tags =
+      string_list
+      |> Enum.map(&Tags.change_tag(%Tag{title: &1}))
+      |> Enum.concat(tags_list)
+
+    put_assoc(changeset, :tags, tags)
   end
 
   defp put_assoc_tags(changeset, _), do: changeset
