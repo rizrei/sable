@@ -37,19 +37,10 @@ defmodule SableWeb.Workouts.CreateExerciseComponent do
             autocomplete="off"
           />
 
-          <LiveSelect.live_select
-            id="new-exercise-form-live-select"
+          <.live_component
+            module={SableWeb.Exercises.MetricsLiveSelectComponent}
+            id="metrics-live-select"
             field={@form[:metrics]}
-            mode={:tags}
-            style={:daisyui}
-            placeholder="Metrics"
-            options={Ecto.Enum.values(Exercise, :metrics)}
-            keep_options_on_select={true}
-            dropdown_extra_class="max-h-30 overflow-y-scroll"
-            tag_extra_class="badge badge-primary p-1.5 text-sm"
-            max_selectable={5}
-            update_min_len={1}
-            phx-target={@myself}
           />
 
           <.button type="submit">Save Exercise</.button>
@@ -73,11 +64,6 @@ defmodule SableWeb.Workouts.CreateExerciseComponent do
   def handle_event("validate", %{"exercise" => exercise_params}, socket) do
     form = %Exercise{} |> Exercises.change_exercise(exercise_params) |> to_form(action: :validate)
     {:noreply, assign(socket, :form, form)}
-  end
-
-  @impl true
-  def handle_event("live_select_change", %{"field" => "exercise_metrics"}, socket) do
-    {:noreply, socket}
   end
 
   def handle_event("cancel_create_exercise", _params, socket) do
