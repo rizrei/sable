@@ -24,20 +24,12 @@ defmodule SableWeb.WorkoutLive.Form do
         <.input field={@form[:title]} type="text" label="Title" required={true} />
         <.input field={@form[:description]} type="textarea" label="Description" />
 
-        <LiveSelect.live_select
+        <.live_component
           id="workout-tag-ids-live-select"
-          field={@form[:tag_ids]}
+          module={SableWeb.Workouts.TagsLiveSelectComponent}
           options={Enum.map(@tags, &{&1.title, &1.id})}
+          field={@form[:tag_ids]}
           value={@selected_tag_ids}
-          style={:daisyui}
-          mode={:tags}
-          placeholder="Search for a tag"
-          keep_options_on_select={true}
-          user_defined_options={true}
-          dropdown_extra_class="max-h-30 overflow-y-scroll"
-          tag_extra_class="badge badge-primary p-1.5 text-sm"
-          max_selectable={5}
-          update_min_len={1}
         />
 
         <div id="workout-exercises-inputs" phx-hook="SortableInputsFor">
@@ -60,16 +52,11 @@ defmodule SableWeb.WorkoutLive.Form do
                   value={workout_exercises_form.index}
                 />
 
-                <LiveSelect.live_select
+                <.live_component
                   id={"workout-exercise-id-live-select-#{workout_exercises_form.id}"}
+                  module={SableWeb.Workouts.ExerciseLiveSelectComponent}
                   field={workout_exercises_form[:exercise_id]}
                   options={Enum.map(@exercises, &{&1.title, &1.id})}
-                  style={:daisyui}
-                  placeholder="Select exercise"
-                  dropdown_extra_class="max-h-40 overflow-y-auto flex flex-col"
-                  tag_extra_class="badge badge-primary p-1.5 text-sm"
-                  max_selectable={5}
-                  update_min_len={1}
                 />
               </div>
 
@@ -153,32 +140,6 @@ defmodule SableWeb.WorkoutLive.Form do
     |> assign(:workout, workout)
     |> assign(:selected_tag_ids, [])
     |> assign(:form, workout |> Workouts.change_workout() |> to_form())
-  end
-
-  @impl true
-  def handle_event(
-        "live_select_change",
-        %{"id" => id, "text" => text, "field" => "workout_tag_ids"},
-        socket
-      ) do
-    options = Sable.Tags.search(text) |> Enum.map(&{&1.title, &1.id})
-
-    send_update(LiveSelect.Component, id: id, options: options)
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event(
-        "live_select_change",
-        %{"id" => id, "text" => text, "field" => "workout_workout_exercises_" <> _rest},
-        socket
-      ) do
-    options = Exercises.search(text) |> Enum.map(&{&1.title, &1.id})
-
-    send_update(LiveSelect.Component, id: id, options: options)
-
-    {:noreply, socket}
   end
 
   @impl true

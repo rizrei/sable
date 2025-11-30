@@ -8,7 +8,8 @@ defmodule Sable.Workouts.Workout do
   import Ecto.Query
   import Ecto.Changeset
 
-  alias Sable.Tags
+  alias Sable.Accounts.User
+  alias Sable.{Repo, Tags}
   alias Sable.Tags.Tag
   alias Sable.Workouts.{WorkoutExercise, WorkoutTag}
 
@@ -19,7 +20,7 @@ defmodule Sable.Workouts.Workout do
     field :description, :string
     field :tag_ids, {:array, :map}, virtual: true
 
-    belongs_to :author, Sable.Accounts.User
+    belongs_to :author, User
 
     has_many :workout_exercises, WorkoutExercise,
       preload_order: [asc: :position],
@@ -37,25 +38,14 @@ defmodule Sable.Workouts.Workout do
     workout
     |> cast(attrs, [:title, :description, :author_id])
     |> put_assoc_tags(attrs)
-    |> cast_assoc(:workout_exercises,
-      with: &workout_exercise_changeset/2,
-      sort_param: :workout_exercises_sort,
-      drop_param: :workout_exercises_drop,
-      required: false
-    )
-    |> validate_required([:title, :description, :author_id])
+    |> cast_assoc(:workout_exercises, workout_exercises_assoc_opts())
+    |> validate_required([:title, :author_id])
     |> foreign_key_constraint(:author_id)
-  end
-
-  defp workout_exercise_changeset(workout_exercise, attrs) do
-    workout_exercise
-    |> cast(attrs, [:exercise_id, :position])
-    |> validate_required([:exercise_id, :position])
   end
 
   defp put_assoc_tags(changeset, %{"tag_ids" => tag_ids}) do
     {uuid_list, string_list} = Enum.split_with(tag_ids, &match?({:ok, _}, Ecto.UUID.cast(&1)))
-    tags_list = Sable.Repo.all(from t in Tag, where: t.id in ^uuid_list)
+    tags_list = Repo.all(from t in Tag, where: t.id in ^uuid_list)
 
     tags =
       string_list
@@ -66,4 +56,19 @@ defmodule Sable.Workouts.Workout do
   end
 
   defp put_assoc_tags(changeset, _), do: changeset
+
+  defp workout_exercises_assoc_opts do
+    [
+      with: &workout_exercise_changeset/2,
+      sort_param: :workout_exercises_sort,
+      drop_param: :workout_exercises_drop,
+      required: false
+    ]
+  end
+
+  defp workout_exercise_changeset(workout_exercise, attrs) do
+    workout_exercise
+    |> cast(attrs, [:exercise_id, :position])
+    |> validate_required([:exercise_id, :position])
+  end
 end
