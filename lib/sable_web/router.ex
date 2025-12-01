@@ -51,7 +51,7 @@ defmodule SableWeb.Router do
 
       live "/", WorkoutLive.Index, :index
 
-      live "/workouts", WorkoutLive.Index, :index
+      live "/my_workouts", WorkoutLive.Index, :index
       live "/workouts/new", WorkoutLive.Form, :new
       live "/workouts/:id", WorkoutLive.Show, :show
       live "/workouts/:id/edit", WorkoutLive.Form, :edit

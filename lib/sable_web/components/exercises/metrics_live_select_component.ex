@@ -12,7 +12,7 @@ defmodule SableWeb.Exercises.MetricsLiveSelectComponent do
       |> assign(:live_select_opts, assigns_to_attributes(assigns, [:errors, :label]))
 
     ~H"""
-    <div>
+    <div class="relative w-full">
       <LiveSelect.live_select
         id="new-exercise-form-live-select"
         field={@field}
@@ -21,7 +21,7 @@ defmodule SableWeb.Exercises.MetricsLiveSelectComponent do
         placeholder="Metrics"
         options={Ecto.Enum.values(Sable.Exercises.Exercise, :metrics)}
         keep_options_on_select={true}
-        dropdown_extra_class="max-h-30 overflow-y-scroll"
+        dropdown_extra_class="absolute z-50 max-h-30 overflow-y-scroll"
         tag_extra_class="badge badge-primary p-1.5 text-sm"
         text_input_extra_class={[@errors != [] && "input-error"]}
         max_selectable={5}

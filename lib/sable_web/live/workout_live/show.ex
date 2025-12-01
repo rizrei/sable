@@ -10,7 +10,7 @@ defmodule SableWeb.WorkoutLive.Show do
       <.header>
         Workout {@workout.title}
         <:actions>
-          <.button navigate={~p"/workouts"}>
+          <.button navigate={~p"/my_workouts"}>
             <.icon name="hero-arrow-left" />
           </.button>
           <.button variant="primary" navigate={~p"/workouts/#{@workout}/edit?&return_to=show"}>

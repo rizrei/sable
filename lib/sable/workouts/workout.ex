@@ -11,7 +11,7 @@ defmodule Sable.Workouts.Workout do
   alias Sable.Accounts.User
   alias Sable.{Repo, Tags}
   alias Sable.Tags.Tag
-  alias Sable.Workouts.{WorkoutExercise, WorkoutTag}
+  alias Sable.Workouts.{UserWorkout, WorkoutExercise, WorkoutTag}
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -22,11 +22,14 @@ defmodule Sable.Workouts.Workout do
 
     belongs_to :author, User
 
+    has_many :user_workouts, UserWorkout
+
     has_many :workout_exercises, WorkoutExercise,
       preload_order: [asc: :position],
       on_replace: :delete
 
     has_many :exercises, through: [:workout_exercises, :exercise]
+    has_many :users, through: [:user_workouts, :user]
 
     many_to_many :tags, Tag, join_through: WorkoutTag, on_replace: :delete
 

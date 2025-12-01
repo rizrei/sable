@@ -15,7 +15,7 @@ defmodule SableWeb.Workouts.TagsLiveSelectComponent do
       |> assign(:live_select_opts, assigns_to_attributes(assigns, [:errors, :label]))
 
     ~H"""
-    <div>
+    <div class="relative w-full">
       <LiveSelect.live_select
         id={@id}
         field={@field}
@@ -26,7 +26,7 @@ defmodule SableWeb.Workouts.TagsLiveSelectComponent do
         placeholder="Search for a tag"
         keep_options_on_select={true}
         user_defined_options={true}
-        dropdown_extra_class="max-h-30 overflow-y-scroll"
+        dropdown_extra_class="absolute z-50 max-h-30 overflow-y-scroll"
         tag_extra_class="badge badge-primary p-1.5 text-sm"
         max_selectable={5}
         update_min_len={1}
