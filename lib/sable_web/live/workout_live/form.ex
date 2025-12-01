@@ -160,13 +160,13 @@ defmodule SableWeb.WorkoutLive.Form do
       |> Map.put("author_id", socket.assigns.current_scope.user.id)
 
     case Workouts.create_workout(workout_params) do
-      {:ok, workout} ->
+      {:ok, %{workout: workout}} ->
         {:noreply,
          socket
          |> put_flash(:info, "Workout created successfully")
          |> push_navigate(to: ~p"/workouts/#{workout}")}
 
-      {:error, %Ecto.Changeset{} = changeset} ->
+      {:error, {:workout, %Ecto.Changeset{} = changeset}} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
   end

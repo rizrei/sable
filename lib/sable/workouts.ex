@@ -4,9 +4,10 @@ defmodule Sable.Workouts do
   """
 
   import Ecto.Query, warn: false
-  alias Sable.Repo
 
-  alias Sable.Workouts.Workout
+  alias Sable.Repo
+  alias Ecto.Multi
+  alias Sable.Workouts.{UserWorkout, Workout}
 
   @doc """
   Returns the list of workouts.
@@ -50,9 +51,12 @@ defmodule Sable.Workouts do
 
   """
   def create_workout(attrs) do
-    %Workout{}
-    |> Workout.changeset(attrs)
-    |> Repo.insert()
+    Multi.new()
+    |> Multi.insert(:workout, Workout.changeset(%Workout{}, attrs))
+    |> Multi.insert(:user_workout, fn %{workout: %Workout{id: workout_id, author_id: user_id}} ->
+      UserWorkout.changeset(%UserWorkout{}, %{user_id: user_id, workout_id: workout_id})
+    end)
+    |> Repo.transaction()
   end
 
   @doc """
