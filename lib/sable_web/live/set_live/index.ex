@@ -112,7 +112,7 @@ defmodule SableWeb.SetLive.Index do
   end
 
   defp return_path(%{"workout_id" => workout_id}), do: ~p"/workouts/#{workout_id}"
-  defp return_path(_), do: ~p"/workouts"
+  defp return_path(_), do: ~p"/my_workouts"
 
   defp new_set_form, do: %Set{} |> Sets.change_set() |> to_form()
 

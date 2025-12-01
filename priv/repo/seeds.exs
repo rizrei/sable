@@ -53,6 +53,7 @@ workout =
     description: "WorkoutDescription",
     author: user,
     tags: [gym_tag, monday_tag, chest_tag],
+    user_workouts: [%UserWorkout{user: user}],
     workout_exercises: [
       %WorkoutExercise{position: 1, exercise: barbell_bench_press_exercise},
       %WorkoutExercise{position: 2, exercise: push_up_exercise}

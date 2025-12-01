@@ -14,14 +14,14 @@ defmodule SableWeb.Workouts.ExerciseLiveSelectComponent do
       |> assign(:live_select_opts, assigns_to_attributes(assigns, [:errors, :label]))
 
     ~H"""
-    <div>
+    <div class="relative w-full">
       <LiveSelect.live_select
         id={@id}
         field={@field}
         options={@options}
         style={:daisyui}
         placeholder="Select exercise"
-        dropdown_extra_class="max-h-40 overflow-y-auto flex flex-col"
+        dropdown_extra_class="absolute z-50 max-h-30 overflow-y-auto flex flex-col"
         tag_extra_class="badge badge-primary p-1.5 text-sm"
         max_selectable={5}
         update_min_len={1}

@@ -166,7 +166,7 @@ defmodule SableWeb.WorkoutLive.Form do
          |> put_flash(:info, "Workout created successfully")
          |> push_navigate(to: ~p"/workouts/#{workout}")}
 
-      {:error, {:workout, %Ecto.Changeset{} = changeset}} ->
+      {:error, :workout, %Ecto.Changeset{} = changeset, _} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
@@ -197,7 +197,7 @@ defmodule SableWeb.WorkoutLive.Form do
   end
 
   defp return_path(%{"return_to" => "show", "id" => id}), do: ~p"/workouts/#{id}"
-  defp return_path(_), do: ~p"/workouts"
+  defp return_path(_), do: ~p"/my_workouts"
 
   defp maybe_empty_tag_ids(params) when is_map_key(params, "tag_ids_empty_selection"),
     do: Map.put(params, "tag_ids", [])

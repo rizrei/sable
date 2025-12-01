@@ -5,8 +5,10 @@ defmodule Sable.Workouts do
 
   import Ecto.Query, warn: false
 
-  alias Sable.Repo
   alias Ecto.Multi
+  alias Sable.Repo
+  alias Sable.Workouts.Queries.ListWorkouts
+  alias Sable.Workouts.Queries.ListWorkouts.Params
   alias Sable.Workouts.{UserWorkout, Workout}
 
   @doc """
@@ -18,9 +20,9 @@ defmodule Sable.Workouts do
       [%Workout{}, ...]
 
   """
-  def list_workouts do
-    Repo.all(Workout)
-  end
+  def list_workouts, do: Repo.all(Workout)
+  def list_workouts(%Params{} = params), do: ListWorkouts.call(params) |> Repo.all()
+  def list_workouts(_), do: list_workouts()
 
   @doc """
   Gets a single workout.
@@ -38,18 +40,7 @@ defmodule Sable.Workouts do
   """
   def get_workout!(id), do: Repo.get!(Workout, id)
 
-  @doc """
-  Creates a workout.
-
-  ## Examples
-
-      iex> create_workout(%{field: value})
-      {:ok, %Workout{}}
-
-      iex> create_workout(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
+  @dialyzer {:nowarn_function, create_workout: 1}
   def create_workout(attrs) do
     Multi.new()
     |> Multi.insert(:workout, Workout.changeset(%Workout{}, attrs))
