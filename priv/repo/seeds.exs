@@ -3,12 +3,22 @@ alias Sable.Repo
 alias Sable.{
   Exercises.Exercise,
   Accounts.User,
-  Tag,
+  Tags.Tag,
   Workouts.Workout,
   Workouts.WorkoutTag,
   Workouts.WorkoutExercise,
+  Workouts.UserWorkout,
   Sets.Set
 }
+
+defmodule Helpers do
+  def random_datetime() do
+    start_ts = DateTime.utc_now() |> DateTime.to_unix()
+    end_ts = DateTime.utc_now() |> DateTime.shift(year: -1) |> DateTime.to_unix()
+    random_ts = :rand.uniform(start_ts - end_ts) + end_ts
+    DateTime.from_unix!(random_ts)
+  end
+end
 
 user =
   %User{email: "test@example.com", hashed_password: Bcrypt.hash_pwd_salt("Passw0rd")}
@@ -61,30 +71,38 @@ workout =
   }
   |> Repo.insert!()
 
-%Set{
-  user: user,
-  exercise: push_up_exercise,
-  metrics: %Sable.SetMetrics{rep: 10}
-}
-|> Repo.insert!()
+1..100
+|> Enum.each(fn n ->
+  %Set{
+    user: user,
+    exercise: push_up_exercise,
+    metrics: %Sable.SetMetrics{rep: Enum.random(5..20)},
+    inserted_at: Helpers.random_datetime()
+  }
+  |> Repo.insert!()
+end)
 
-%Set{
-  user: user,
-  exercise: push_up_exercise,
-  metrics: %Sable.SetMetrics{rep: 20}
-}
-|> Repo.insert!()
+1..100
+|> Enum.each(fn n ->
+  %Set{
+    user: user,
+    exercise: barbell_bench_press_exercise,
+    metrics: %Sable.SetMetrics{rep: Enum.random(5..10), weight: Enum.random(70..100)},
+    inserted_at: Helpers.random_datetime()
+  }
+  |> Repo.insert!()
+end)
 
-%Set{
-  user: user,
-  exercise: barbell_bench_press_exercise,
-  metrics: %Sable.SetMetrics{rep: 10, weight: 100}
-}
-|> Repo.insert!()
+# %Set{
+#   user: user,
+#   exercise: barbell_bench_press_exercise,
+#   metrics: %Sable.SetMetrics{rep: 10, weight: 100}
+# }
+# |> Repo.insert!()
 
-%Set{
-  user: user,
-  exercise: barbell_bench_press_exercise,
-  metrics: %Sable.SetMetrics{rep: 8, weight: 120}
-}
-|> Repo.insert!()
+# %Set{
+#   user: user,
+#   exercise: barbell_bench_press_exercise,
+#   metrics: %Sable.SetMetrics{rep: 8, weight: 120}
+# }
+# |> Repo.insert!()

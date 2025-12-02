@@ -11,7 +11,7 @@ defmodule Sable.Exercises.Exercise do
   @foreign_key_type :binary_id
   schema "exercises" do
     field :title, :string
-    field :metrics, {:array, Ecto.Enum}, values: [:rep, :weight, :distance, :time]
+    field :metrics, {:array, Ecto.Enum}, values: [:rep, :weight, :distance, :duration]
 
     belongs_to :author, Sable.Accounts.User
 
