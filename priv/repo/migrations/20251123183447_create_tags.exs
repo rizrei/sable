@@ -1,11 +1,11 @@
-defmodule Sable.Repo.Migrations.CreateMetrics do
+defmodule Sable.Repo.Migrations.CreateTags do
   use Ecto.Migration
 
   def change do
-    create table(:metrics, primary_key: false) do
+    create table(:tags, primary_key: false) do
       add :id, :binary_id, primary_key: true
       add :title, :string, null: false
-      add :unit, :string, null: false
+      add :color, :string, null: false, default: "#00FFFF"
 
       timestamps(type: :utc_datetime)
     end
