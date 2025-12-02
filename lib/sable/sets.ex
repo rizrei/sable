@@ -3,33 +3,11 @@ defmodule Sable.Sets do
   The Sets context.
   """
 
-  import Ecto.Query, warn: false
+  import Ecto.Query
 
   alias Sable.Accounts.Scope
   alias Sable.Repo
   alias Sable.Sets.Set
-
-  @doc """
-  Subscribes to scoped notifications about any set changes.
-
-  The broadcasted messages match the pattern:
-
-    * {:created, %Set{}}
-    * {:updated, %Set{}}
-    * {:deleted, %Set{}}
-
-  """
-  def subscribe_sets(%Scope{} = scope) do
-    key = scope.user.id
-
-    Phoenix.PubSub.subscribe(Sable.PubSub, "user:#{key}:sets")
-  end
-
-  defp broadcast_set(%Scope{} = scope, message) do
-    key = scope.user.id
-
-    Phoenix.PubSub.broadcast(Sable.PubSub, "user:#{key}:sets", message)
-  end
 
   @doc """
   Returns the list of sets.
@@ -78,12 +56,11 @@ defmodule Sable.Sets do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_set(scope, attrs) do
+  def create_set(attrs) do
     with {:ok, set = %Set{}} <-
            %Set{}
            |> Set.changeset(attrs)
            |> Repo.insert() do
-      broadcast_set(scope, {:created, set})
       {:ok, set}
     end
   end
@@ -105,7 +82,6 @@ defmodule Sable.Sets do
 
     with {:ok, set = %Set{}} <-
            Repo.delete(set) do
-      broadcast_set(scope, {:deleted, set})
       {:ok, set}
     end
   end

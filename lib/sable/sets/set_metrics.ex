@@ -10,12 +10,12 @@ defmodule Sable.SetMetrics do
     field :rep, :integer
     field :weight, :integer
     field :distance, :integer
-    field :time, :integer
+    field :duration, :integer
   end
 
   @doc false
   def changeset(metrics, attrs) do
     metrics
-    |> cast(attrs, [:rep, :weight, :distance, :time])
+    |> cast(attrs, [:rep, :weight, :distance, :duration])
   end
 end
