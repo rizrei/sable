@@ -3,10 +3,11 @@ alias Sable.Repo
 alias Sable.{
   Exercises.Exercise,
   Accounts.User,
-  Tag,
+  Tags.Tag,
   Workouts.Workout,
   Workouts.WorkoutTag,
   Workouts.WorkoutExercise,
+  Workouts.UserWorkout,
   Sets.Set
 }
 

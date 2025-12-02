@@ -5,6 +5,7 @@ defmodule SableWeb.SetLive.Index do
 
   alias Sable.Sets
   alias Sets.Set
+  alias Contex.{LinePlot, PointPlot, Dataset, Plot}
 
   @default_limit 5
 
@@ -20,6 +21,10 @@ defmodule SableWeb.SetLive.Index do
           </.button>
         </:actions>
       </.header>
+
+      <div class="column">
+        {build_pointplot(@exercise)}
+      </div>
 
       <.set_form form={@form} exercise={@exercise} />
       <.sets_table sets_stream={@streams.sets} metrics={@exercise.metrics} />
@@ -43,14 +48,43 @@ defmodule SableWeb.SetLive.Index do
      |> assign(:form, new_set_form())}
   end
 
+  def build_pointplot(exercise) do
+    params = %{
+      type: exercise.metrics |> hd(),
+      period: "month",
+      shape: Contex.LinePlot,
+      exercise: exercise
+    }
+
+    %{dataset: dataset, shape: shape} =
+      plot_params =
+      Sable.Sets.PlotParams.changeset(%Sable.Sets.PlotParams{}, params)
+      |> Ecto.Changeset.apply_changes()
+
+    plot =
+      Plot.new(dataset, shape, plot_params.width, plot_params.height,
+        custom_x_scale: plot_params.custom_x_scale,
+        smoothed: plot_params.smoothed
+        # custom_x_scale: custom_x_scale
+        # custom_y_scale: custom_y_scale
+      )
+      |> Plot.titles(plot_params.title, nil)
+
+    Plot.to_svg(plot)
+  end
+
   @impl true
   def handle_params(params, uri, socket) do
+    sets = Sets.list_sets(socket.assigns.current_scope, params)
+
     socket =
       socket
       |> assign(:uri, build_uri(uri))
       |> assign(:return_path, return_path(params))
       |> assign(:exercise, Sable.Exercises.get_exercise(params["exercise_id"]))
-      |> stream(:sets, Sets.list_sets(socket.assigns.current_scope, params))
+      |> stream(:sets, sets)
+
+    # |> assign(:chart_options, chart_options())
 
     {:noreply, socket}
   end

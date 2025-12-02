@@ -62,6 +62,7 @@ defmodule Sable.MixProject do
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
       {:live_select, "~> 1.0"},
+      {:contex, "~> 0.5.0"},
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.2.0",
