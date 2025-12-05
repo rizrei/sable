@@ -38,11 +38,6 @@ defmodule SableWeb.WorkoutLive.Form do
               <div class="flex items-center space-x-2">
                 <.icon name="hero-bars-3" class="cursor-pointer relative w-5 h-5" />
                 <div class="h-5 leading-5">{workout_exercises_form.index + 1}</div>
-                <.input
-                  hidden={true}
-                  field={workout_exercises_form[:position]}
-                  value={workout_exercises_form.index + 1}
-                />
               </div>
 
               <input

@@ -62,16 +62,17 @@ defmodule Sable.Workouts.Workout do
 
   defp workout_exercises_assoc_opts do
     [
-      with: &workout_exercise_changeset/2,
+      with: &workout_exercise_changeset/3,
       sort_param: :workout_exercises_sort,
       drop_param: :workout_exercises_drop,
       required: false
     ]
   end
 
-  defp workout_exercise_changeset(workout_exercise, attrs) do
+  defp workout_exercise_changeset(workout_exercise, attrs, position) do
     workout_exercise
-    |> cast(attrs, [:exercise_id, :position])
+    |> cast(attrs, [:exercise_id])
+    |> put_change(:position, position + 1)
     |> validate_required([:exercise_id, :position])
   end
 end
