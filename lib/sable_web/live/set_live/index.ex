@@ -4,8 +4,7 @@ defmodule SableWeb.SetLive.Index do
   import SableWeb.SetComponents
 
   alias Sable.Sets
-  alias Sets.Set
-  alias Sable.Sets.Plot.Params
+  alias Sets.{Plot, Set}
 
   @default_limit 5
 
@@ -22,8 +21,7 @@ defmodule SableWeb.SetLive.Index do
         </:actions>
       </.header>
 
-      <.plot plot={@plot} form={@plot_form} exercise={@exercise} />
-
+      <.set_plot plot={@plot} form={@plot_form} />
       <.set_form form={@form} exercise={@exercise} />
       <.sets_table sets_stream={@streams.sets} metrics={@exercise.metrics} />
 
@@ -36,61 +34,18 @@ defmodule SableWeb.SetLive.Index do
     """
   end
 
-  def plot(assigns) do
-    ~H"""
-    <div class="flex gap-2 h-full">
-      <div class="w-1/4">
-        <.form
-          for={@form}
-          id="plot-form"
-          phx-change="plot_change"
-        >
-          <.input
-            field={@form[:shape]}
-            type="select"
-            options={Params.shape_options()}
-            label="Shape"
-          />
-
-          <.input
-            field={@form[:period]}
-            type="select"
-            options={Ecto.Enum.values(Params, :period)}
-            label="Period"
-          />
-
-          <.input
-            field={@form[:type]}
-            type="select"
-            options={Params.type_options(@exercise)}
-            label="Type"
-          />
-        </.form>
-      </div>
-      <div :if={@plot} class="flex-1">
-        {Contex.Plot.to_svg(@plot)}
-      </div>
-      <div :if={!@plot} class="flex items-center justify-center h-full w-full text-gray-500">
-        Plot unavailable
-      </div>
-    </div>
-    """
-  end
-
   @impl true
   def mount(params, _session, %{assigns: assigns} = socket) do
     exercise = Sable.Exercises.get_exercise(params["exercise_id"])
-    plot_params = Sable.Sets.Plot.default_params(exercise)
-    plot_form = plot_params |> Sable.Sets.Plot.Params.changeset() |> to_form(as: :plot)
+    plot = build_plot(exercise, assigns.current_scope.user)
 
     socket =
       socket
       |> assign(:page_title, "Sets")
       |> assign(:form, new_set_form())
       |> assign(:exercise, exercise)
-      |> assign(:plot_params, plot_params)
-      |> assign(:plot_form, plot_form)
-      |> assign_plot(plot_params)
+      |> assign(:plot, plot)
+      |> assign(:plot_form, to_form(Plot.changeset(plot), as: :plot))
 
     {:ok, socket}
   end
@@ -113,11 +68,13 @@ defmodule SableWeb.SetLive.Index do
     set = Sets.get_set!(assigns.current_scope, id)
     {:ok, _} = Sets.delete_set(assigns.current_scope, set)
 
+    IO.inspect(set, label: "Deleted set")
+
     socket =
       socket
       |> put_flash(:info, "Set deleted successfully.")
       |> stream_delete(:sets, set)
-      |> assign_plot(assigns.plot_params)
+      |> change_plot(set, :remove)
 
     {:noreply, socket}
   end
@@ -137,17 +94,11 @@ defmodule SableWeb.SetLive.Index do
 
   @impl true
   def handle_event("plot_change", %{"plot" => params}, %{assigns: assigns} = socket) do
-    case assigns.plot_params
-         |> Params.changeset(params)
+    case assigns.plot
+         |> Plot.changeset(params)
          |> Ecto.Changeset.apply_action(:validate) do
-      {:ok, %Params{} = plot_params} ->
-        socket =
-          socket
-          |> assign(:plot_params, plot_params)
-          |> assign(:plot_form, plot_params |> Params.changeset() |> to_form(as: :plot))
-          |> assign_plot(plot_params)
-
-        {:noreply, socket}
+      {:ok, %Plot{} = plot} ->
+        {:noreply, assign(socket, :plot, plot)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
@@ -167,7 +118,7 @@ defmodule SableWeb.SetLive.Index do
           |> assign(:form, new_set_form())
           |> put_flash(:info, "Set created successfully.")
           |> stream_insert(:sets, set, at: 0)
-          |> assign_plot(assigns.plot_params)
+          |> change_plot(set, :add)
 
         {:noreply, socket}
 
@@ -191,11 +142,29 @@ defmodule SableWeb.SetLive.Index do
     |> URI.encode_query()
   end
 
-  defp assign_plot(%{assigns: assigns} = socket, plot_params) do
-    Sable.Sets.Plot.build(assigns.current_scope.user, assigns.exercise, plot_params)
-    |> case do
-      %Contex.Plot{} = plot -> assign(socket, :plot, plot)
-      _ -> assign(socket, :plot, nil)
-    end
+  defp build_plot(exercise, user) do
+    %Plot{exercise: exercise, user: user}
+    |> Plot.changeset()
+    |> Ecto.Changeset.apply_action!(:validate)
+  end
+
+  defp change_plot(socket, set, :add) do
+    socket
+    |> update(:plot, fn plot ->
+      plot
+      |> Plot.sets_list_changeset(%{sets_list: plot.sets_list ++ [set]})
+      |> Ecto.Changeset.apply_action!(:validate)
+    end)
+  end
+
+  defp change_plot(socket, %Set{id: set_id}, :remove) do
+    socket
+    |> update(:plot, fn plot ->
+      plot
+      |> Plot.sets_list_changeset(%{
+        sets_list: Enum.reject(plot.sets_list, fn %{id: id} -> id == set_id end)
+      })
+      |> Ecto.Changeset.apply_action!(:validate)
+    end)
   end
 end

@@ -3,6 +3,8 @@ defmodule SableWeb.SetComponents do
 
   use SableWeb, :live_component
 
+  alias Sable.Sets.Plot
+
   attr :exercise, Sable.Exercises.Exercise, required: true
   attr :form, Phoenix.HTML.Form, required: true
 
@@ -54,6 +56,50 @@ defmodule SableWeb.SetComponents do
         </.button>
       </:action>
     </.table>
+    """
+  end
+
+  attr :plot, :map, required: true
+  attr :form, :map, required: true
+
+  def set_plot(assigns) do
+    ~H"""
+    <div class="flex gap-2 h-full">
+      <div class="w-1/4">
+        <.form
+          for={@form}
+          id="plot-form"
+          phx-change="plot_change"
+        >
+          <.input
+            field={@form[:shape]}
+            type="select"
+            options={Plot.shape_options()}
+            label="Shape"
+          />
+
+          <.input
+            field={@form[:period]}
+            type="select"
+            options={Ecto.Enum.values(Plot, :period)}
+            label="Period"
+          />
+
+          <.input
+            field={@form[:type]}
+            type="select"
+            options={Plot.type_options(@plot)}
+            label="Type"
+          />
+        </.form>
+      </div>
+      <div :if={@plot.plot} class="flex-1">
+        {Contex.Plot.to_svg(@plot.plot)}
+      </div>
+      <div :if={!@plot.plot} class="flex items-center justify-center h-full w-full text-gray-500">
+        Plot unavailable
+      </div>
+    </div>
     """
   end
 end

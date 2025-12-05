@@ -45,20 +45,18 @@ defmodule SableWeb.WorkoutLive.Form do
                 />
               </div>
 
-              <div class="grow">
-                <input
-                  type="hidden"
-                  name="workout[workout_exercises_sort][]"
-                  value={workout_exercises_form.index}
-                />
+              <input
+                type="hidden"
+                name="workout[workout_exercises_sort][]"
+                value={workout_exercises_form.index}
+              />
 
-                <.live_component
-                  id={"workout-exercise-id-live-select-#{workout_exercises_form.id}"}
-                  module={SableWeb.Workouts.ExerciseLiveSelectComponent}
-                  field={workout_exercises_form[:exercise_id]}
-                  options={Enum.map(@exercises, &{&1.title, &1.id})}
-                />
-              </div>
+              <.live_component
+                id={"workout-exercise-id-live-select-#{workout_exercises_form.id}"}
+                module={SableWeb.Workouts.ExerciseLiveSelectComponent}
+                field={workout_exercises_form[:exercise_id]}
+                options={@workout_exercises_options}
+              />
 
               <button
                 type="button"
@@ -113,11 +111,14 @@ defmodule SableWeb.WorkoutLive.Form do
   def mount(params, _session, socket) do
     if connected?(socket), do: Exercises.subscribe_exercises()
 
+    workout_exercises_options =
+      Exercises.list_exercises(limit: 25) |> Enum.map(&{&1.title, &1.id})
+
     {:ok,
      socket
      |> assign(:return_path, return_path(params))
      |> assign(:tags, Tags.list_tags())
-     |> assign(:exercises, Exercises.list_exercises(limit: 25))
+     |> assign(:workout_exercises_options, workout_exercises_options)
      |> assign(:show_exercise_form?, false)
      |> apply_action(socket.assigns.live_action, params)}
   end
@@ -187,10 +188,13 @@ defmodule SableWeb.WorkoutLive.Form do
   end
 
   @impl true
-  def handle_info({:created, %Exercise{} = exercise}, socket) do
+  def handle_info({:created, %Exercise{id: id, title: title}}, socket) do
     socket =
       socket
-      |> update(:exercises, &Enum.sort_by([exercise | &1], fn e -> e.title end))
+      |> update(
+        :workout_exercises_options,
+        &Enum.sort_by([{title, id} | &1], fn {title, _id} -> title end)
+      )
       |> put_flash(:info, "Exercise created successfully")
 
     {:noreply, socket}
