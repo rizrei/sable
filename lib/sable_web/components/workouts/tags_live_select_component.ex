@@ -3,6 +3,8 @@ defmodule SableWeb.Workouts.TagsLiveSelectComponent do
 
   use SableWeb, :live_component
 
+  alias Sable.Tags.Queries.ListTags.Params, as: ListTagsParams
+
   attr :id, :string, required: true
   attr :field, Phoenix.HTML.FormField, required: true
   attr :options, :list, required: true
@@ -39,10 +41,16 @@ defmodule SableWeb.Workouts.TagsLiveSelectComponent do
 
   @impl true
   def handle_event("live_select_change", %{"id" => id, "text" => text}, socket) do
-    options = Sable.Tags.search(text) |> Enum.map(&{&1.title, &1.id})
-
-    send_update(LiveSelect.Component, id: id, options: options)
+    send_update(LiveSelect.Component, id: id, options: tag_options(%{filter: %{search: text}}))
 
     {:noreply, socket}
+  end
+
+  defp tag_options(params) do
+    %ListTagsParams{}
+    |> ListTagsParams.changeset(params)
+    |> Ecto.Changeset.apply_changes()
+    |> Sable.Tags.list_tags()
+    |> Enum.map(&{&1.title, &1.id})
   end
 end

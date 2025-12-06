@@ -1,20 +1,21 @@
-defmodule Sable.Workouts.Queries.ListWorkouts do
+defmodule Sable.Tags.Queries.ListTags do
   @moduledoc """
-  A query module for filtering Workouts based on parameters.
+  A query module for filtering Tags based on parameters.
   """
 
   import Ecto.Query
 
-  alias Sable.Workouts.Queries.ListWorkouts.Params
-  alias Sable.Workouts.Queries.ListWorkouts.Params.Filter
-  alias Sable.Workouts.{Workout, WorkoutTag}
+  alias Sable.Tags.Queries.ListTags.Params
+  alias Sable.Tags.Queries.ListTags.Params.Filter
+  alias Sable.Tags.Tag
 
   def call(%Params{limit: limit, offset: offset, filter: filter, order_by: order_by}) do
-    Workout
+    Tag
     |> with_filter(filter)
     |> with_order(order_by)
     |> with_limit(limit)
     |> with_offset(offset)
+    |> distinct(true)
   end
 
   defp with_filter(query, %Filter{} = filter) do
@@ -22,7 +23,7 @@ defmodule Sable.Workouts.Queries.ListWorkouts do
     |> Map.from_struct()
     |> Enum.reduce(query, fn
       {:search, term}, query -> with_search(query, term)
-      {:tag_id, tag_id}, query -> with_tag_id(query, tag_id)
+      {:user_id, user_id}, query -> with_user_id(query, user_id)
     end)
   end
 
@@ -31,13 +32,14 @@ defmodule Sable.Workouts.Queries.ListWorkouts do
 
   defp with_search(query, _), do: query
 
-  defp with_tag_id(query, nil), do: query
-  defp with_tag_id(query, []), do: query
+  defp with_user_id(query, nil), do: query
+  defp with_user_id(query, []), do: query
 
-  defp with_tag_id(query, tag_ids) do
+  defp with_user_id(query, user_id) do
     query
-    |> join(:left, [w], wt in WorkoutTag, on: wt.workout_id == w.id)
-    |> where([_w, wt], wt.tag_id in ^tag_ids)
+    |> join(:inner, [t], w in assoc(t, :workouts))
+    |> join(:inner, [_t, w], uw in assoc(w, :user_workouts))
+    |> where([_t, _w, uw], uw.user_id == ^user_id)
   end
 
   defp with_order(query, nil), do: query

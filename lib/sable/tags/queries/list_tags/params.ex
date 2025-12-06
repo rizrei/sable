@@ -1,4 +1,4 @@
-defmodule Sable.Workouts.Queries.ListWorkouts.Params do
+defmodule Sable.Tags.Queries.ListTags.Params do
   @moduledoc """
   Validates and normalizes parameters for query.
   """
@@ -7,7 +7,7 @@ defmodule Sable.Workouts.Queries.ListWorkouts.Params do
 
   import Ecto.Changeset
 
-  alias Sable.Workouts.Queries.ListWorkouts.Params.{Filter, OrderBy}
+  alias Sable.Tags.Queries.ListTags.Params.{Filter, OrderBy}
 
   @typedoc """
   Struct representing normalized parameters for query.
@@ -34,7 +34,7 @@ defmodule Sable.Workouts.Queries.ListWorkouts.Params do
         order_by: %{title: :asc},
         filter: %{
           search: "some search term",
-          tag_id: "e2834dd1-f44c-48b0-8fc9-e6087f9e19c2",
+          user_id: "e2834dd1-f44c-48b0-8fc9-e6087f9e19c2",
         }
       }
   """
@@ -60,6 +60,7 @@ defmodule Sable.Workouts.Queries.ListWorkouts.Params do
     |> cast(attrs, [:limit, :offset])
     |> validate_number(:limit, greater_than_or_equal_to: 1)
     |> validate_number(:offset, greater_than_or_equal_to: 0)
+    |> put_embed(:order_by, Map.get(schema, :order_by) || %OrderBy{title: :asc})
     |> cast_embed(:order_by, with: &OrderBy.changeset/2)
     |> cast_embed(:filter, with: &Filter.changeset/2)
   end

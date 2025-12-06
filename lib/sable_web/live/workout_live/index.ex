@@ -2,10 +2,7 @@ defmodule SableWeb.WorkoutLive.Index do
   use SableWeb, :live_view
 
   import SableWeb.TagComponents
-  import Ecto.Changeset
-
-  alias Sable.{Repo, Tags, Workouts}
-  alias Sable.Workouts.Queries.ListWorkouts.Params
+  alias Sable.{Repo, Workouts}
 
   @impl true
   def render(assigns) do
@@ -21,10 +18,9 @@ defmodule SableWeb.WorkoutLive.Index do
       </.header>
 
       <.live_component
-        module={SableWeb.Workouts.FilterFormComponent}
-        id="filter-form"
-        form={@form}
-        tag_options={@tag_options}
+        module={SableWeb.Workouts.FilterComponent}
+        id="filter"
+        current_scope={@current_scope}
       />
 
       <.table
@@ -70,8 +66,6 @@ defmodule SableWeb.WorkoutLive.Index do
     socket =
       socket
       |> assign(:page_title, "My Workouts")
-      |> assign(:tag_options, tag_options(socket.assigns.current_scope.user))
-      |> assign(:form, %Params{} |> Params.changeset() |> to_form(as: :filter))
       |> stream(:workouts, list_workouts())
 
     {:ok, socket}
@@ -86,22 +80,10 @@ defmodule SableWeb.WorkoutLive.Index do
   end
 
   @impl true
-  def handle_event("filter", %{"filter" => filter_params}, socket) do
-    case %Params{} |> Params.changeset(filter_params) |> apply_action(:validate) do
-      {:ok, params} ->
-        {:noreply,
-         socket
-         |> stream(:workouts, list_workouts(params), reset: true)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :form, to_form(changeset, as: :filter))}
-    end
-  end
-
-  defp tag_options(user) do
-    user
-    |> Tags.list_tags()
-    |> Enum.map(&{&1.title, &1.id})
+  def handle_info({:filter_change, params}, socket) do
+    {:noreply,
+     socket
+     |> stream(:workouts, list_workouts(params), reset: true)}
   end
 
   defp list_workouts do
