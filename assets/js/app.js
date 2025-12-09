@@ -24,12 +24,36 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/sable"
 import topbar from "../vendor/topbar"
+import live_select from "live_select"
+import Sortable from 'sortablejs';
+
+const SortableInputsFor = {
+  mounted(){
+    new Sortable(this.el, {
+      animation: 150,
+      ghostClass: "opacity-50",
+      handle: ".hero-bars-3",
+      onEnd: (event) => {
+        event.item.querySelector("input").dispatchEvent(
+          new Event("input", {bubbles: true})
+        )
+      }
+    })
+  }
+}
+
+
+const hooks = {
+  ...colocatedHooks,
+  ...live_select,
+  SortableInputsFor: SortableInputsFor
+}
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: hooks,
 })
 
 // Show progress bar on live navigation and form submits
@@ -57,7 +81,7 @@ if (process.env.NODE_ENV === "development") {
     // Enable server log streaming to client.
     // Disable with reloader.disableServerLogs()
     reloader.enableServerLogs()
-
+    
     // Open configured PLUG_EDITOR at file:line of the clicked element's HEEx component
     //
     //   * click with "c" key pressed to open at caller location
@@ -76,7 +100,7 @@ if (process.env.NODE_ENV === "development") {
         reloader.openEditorAtDef(e.target)
       }
     }, true)
-
+    
     window.liveReloader = reloader
   })
 }

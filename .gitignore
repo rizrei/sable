@@ -49,4 +49,6 @@ sable.code-workspace
 /config/.env.dev.exs
 /config/.env.test.exs
 /config/.env.exs
+node_modules/
+
 
