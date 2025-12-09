@@ -3,7 +3,7 @@ defmodule Sable.Tags do
   The Tags context.
   """
 
-  import Ecto.Query
+  # import Ecto.Query
 
   alias Sable.Repo
   alias Sable.Tags.Tag

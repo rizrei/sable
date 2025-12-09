@@ -71,11 +71,10 @@ defmodule SableWeb.Workouts.CreateExerciseComponent do
   end
 
   def handle_event("save", %{"exercise" => params}, socket) do
-    exercise_params =
-      params
-      |> Map.put("author_id", get_user_id(socket))
-
-    case Exercises.create_exercise(exercise_params) do
+    params
+    |> Map.put("author_id", get_user_id(socket))
+    |> Exercises.create_exercise()
+    |> case do
       {:ok, _} ->
         {:noreply,
          socket
